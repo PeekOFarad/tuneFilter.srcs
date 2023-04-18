@@ -32,7 +32,6 @@ use IEEE.NUMERIC_STD.ALL;
 entity control is
     Port (  clk, rst, RQ, CFG   : in STD_LOGIC;
             input,
-            rdata_coeff,
             rdata_sample,
             wreg_c              : in std_logic_vector(c_data_w-1 downto 0);
             GNT, RDY,
@@ -60,7 +59,7 @@ type t_state is (idle, init, run);
 -------------------------------------------------------------------------------------------------
 --SRAM
 --read and write signals
-signal wdata_sample_int, wdata_coeff_int, rdata_sample_s, rdata_coeff_s
+signal wdata_sample_int, wdata_coeff_int, rdata_sample_int
     : signed(c_data_w-1 downto 0);
 
 signal waddr_sample_int, raddr_sample_int
@@ -86,64 +85,66 @@ begin
 p_signal_asignment:
 --sample memory
 raddr_sample <= std_logic_vector(raddr_sample_int);
-rdata_sample_s <= signed(rdata_sample);
+rdata_sample_int <= signed(rdata_sample);
 waddr_sample <= std_logic_vector(waddr_sample_int);
 wdata_sample <= std_logic_vector(wdata_sample_int);
 --coefficient memory
 raddr_coeff <= std_logic_vector(raddr_coeff_int);
-rdata_coeff_s <= signed(rdata_coeff);
 waddr_coeff <= std_logic_vector(waddr_coeff_int);
 wdata_coeff <= std_logic_vector(wdata_coeff_int);
 wreg_c_int <= signed(wreg_c);
 
 p_reg: process (clk, rst)
 begin
-    if rst = '1' then
-        wreg0_s <= (others => '0');
-        wreg1_s <= (others => '0');
-        state <= idle;
-        output <= (others => '0');
-        GNT <= '0';
-        RDY <= '0';
-        RQ_s <= '0';
-        CFG_s <= '0';
-        cnt_coeff_s <= (others => '0');
-        cnt_section_s <= (others => '0');
-    elsif rising_edge(clk) then
-        --FSM
-        state <= next_state;
-        --output registers
-        if RDY_c = '1' then --temporary output
-            output <= std_logic_vector(wreg1_s);
-        end if;
-        --granted signal - data recieved
-        if GNT_c = '1' then
-            GNT <= '1';
-        elsif RQ_s = '0' then
+    if rising_edge(clk) then
+        --SYNCHRONOUS RESET
+        if rst = '1' then
+            wreg0_s <= (others => '0');
+            wreg1_s <= (others => '0');
+            state <= idle;
+            output <= (others => '0');
             GNT <= '0';
-        end if;
-        --ready signal - output data valid
-        if RDY_c = '1' then
-            RDY <= '1';
-        elsif RQ_s = '1' then
             RDY <= '0';
-        end if;
-        --data sync ddff
-        RQ_s <= RQ;
-        CFG_s <= CFG; 
-        --counter register
-        cnt_coeff_s <= cnt_coeff_c;
-        cnt_section_s <= cnt_section_c;
-        --internal memory registers
-        if en_new_delay = '1' AND en_init = '0' then
-            wreg0_s <= wreg_c_int; --stores 1st section result
-        end if;
-        if en_init = '0' then
-            --TODO: use enable signals to split combinational and sequential?
-            if en_old_delay = '1' then
-                wreg1_s <= rdata_sample_s; --stores old delay
-            elsif en_result = '1' then
-                wreg1_s <= wreg_c_int; --stores section result
+            RQ_s <= '0';
+            CFG_s <= '0';
+            cnt_coeff_s <= (others => '0');
+            cnt_section_s <= (others => '0');
+        else
+            --FSM
+            state <= next_state;
+            --output registers
+            if RDY_c = '1' then --temporary output
+                output <= std_logic_vector(wreg1_s);
+            end if;
+            --granted signal - data recieved
+            if GNT_c = '1' then
+                GNT <= '1';
+            elsif RQ_s = '0' then
+                GNT <= '0';
+            end if;
+            --ready signal - output data valid
+            if RDY_c = '1' then
+                RDY <= '1';
+            elsif RQ_s = '1' then
+                RDY <= '0';
+            end if;
+            --data sync ddff
+            RQ_s <= RQ;
+            CFG_s <= CFG; 
+            --counter register
+            cnt_coeff_s <= cnt_coeff_c;
+            cnt_section_s <= cnt_section_c;
+            --internal memory registers
+            if en_new_delay = '1' AND en_init = '0' then
+                wreg0_s <= wreg_c_int; --stores 1st section result
+            end if;
+            if en_init = '0' then
+                --TODO: use enable signals to split combinational and sequential?
+                if en_old_delay = '1' then
+                    wreg1_s <= rdata_sample_int; --stores old delay
+                elsif en_result = '1' then
+                    wreg1_s <= wreg_c_int; --stores section result
+                end if;
             end if;
         end if;
     end if;

@@ -21,11 +21,11 @@ architecture bench of control_tb is
   signal GNT, RDY : STD_LOGIC;
   signal output : std_logic_vector(c_data_w-1 downto 0);
 
-  constant clock_period: time := 10 ns;
+  constant clock_period: time := 25 ns;
   signal stop_the_clock: boolean;
 
   signal test_fail : boolean;
-  signal cnt_err : integer;--unsigned(c_len_cnt_err-1 downto 0);
+  signal cnt_err : integer;
   signal data_expeced_log : std_logic_vector(c_data_w-1 downto 0);
   constant c_coeff_mem_init : t_coeff_mem := (
   "0001000110101011",  "0001000010101111",  "0001010111111100",  "0100000000000000",  "0010000000000000", "0000000000000000", "0000000000000000", "0000000000000000",

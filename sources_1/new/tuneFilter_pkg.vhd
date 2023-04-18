@@ -25,12 +25,16 @@ constant c_len_cnt_coeff : integer := integer(ceil(log2(real(2*c_s_order+1))));
 constant c_len_cnt_sample : integer := integer(ceil(log2(real(c_S_Order+1))));
 -- =2; find nearest power of 2 larger than the number of delay elements in a section
 constant c_len_cnt_section : integer := integer(ceil(log2(real(c_f_order/c_s_order))));
--- =2; finde the nearest power of 2 larger than the number of sections
+--=2; finde the nearest power of 2 larger than the number of sections
+
 constant c_len_sample_mem : integer := c_F_Order/c_s_order * 2**c_len_cnt_sample;
 --sample memory size
 constant c_len_coeff_mem : integer := c_f_order/c_s_order * 2**c_len_cnt_coeff;
 -- =32; coefficient memory size = number of sections * coeff. memory alocated for one section
+
+
 constant c_len_cnt_init : integer := integer(ceil(log2(real(c_len_coeff_mem))));
+
 --types
 type t_sample_mem is array (0 to c_len_sample_mem-1) of std_logic_vector(c_data_w-1 downto 0); --sram
 type t_coeff_mem is array (0 to c_len_coeff_mem-1) of std_logic_vector(c_data_w-1 downto 0);

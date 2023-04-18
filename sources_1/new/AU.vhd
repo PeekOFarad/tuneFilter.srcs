@@ -56,18 +56,20 @@ signal wreg_c_int : signed(c_data_w-1 downto 0);
 begin
 p_reg: process (clk, rst)
 begin
-    if rst = '1' then
-        mul_pipe_s <= (others => '0');
-        acc_s <= (others => '0');
-    elsif rising_edge(clk) then
-        --arithmetic regiters
-        mul_pipe_s <= mul_pipe_c;
-        if en_acc = '1' then --accumulator enable
-            acc_s <= acc_c;
-            mul_pipe_s <= mul_pipe_c;
-        else
-            acc_s <= (others => '0');
+    if rising_edge(clk) then
+        if rst = '1' then
             mul_pipe_s <= (others => '0');
+            acc_s <= (others => '0');
+        else
+            --arithmetic regiters
+            mul_pipe_s <= mul_pipe_c;
+            if en_acc = '1' then --accumulator enable
+                acc_s <= acc_c;
+                mul_pipe_s <= mul_pipe_c;
+            else
+                acc_s <= (others => '0');
+                mul_pipe_s <= (others => '0');
+            end if;
         end if;
     end if;
 end process;

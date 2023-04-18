@@ -29,7 +29,7 @@ use IEEE.NUMERIC_STD.ALL;
 --use UNISIM.VComponents.all;
 
 entity ram is
-    Port (  clk, rst            : in STD_LOGIC;
+    Port (  clk            : in STD_LOGIC;
             we_sample_mem,
             we_coeff_mem        : in STD_LOGIC;
             raddr_sample,
@@ -45,19 +45,22 @@ end ram;
 
 architecture rtl of ram is
 -------------------------------------------------------------------------------------------------
---types------------------------------------------------------------------------------------------
--------------------------------------------------------------------------------------------------
--------------------------------------------------------------------------------------------------
 --signals----------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------
 --SRAM
 signal sample_mem : t_sample_mem;
 signal coeff_mem : t_coeff_mem;
 -------------------------------------------------------------------------------------------------
+--attributes-------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------
+attribute ram_style : string;
+attribute ram_style of sample_mem : signal is "block";
+attribute ram_style of coeff_mem : signal is "block"; 
+-------------------------------------------------------------------------------------------------
 begin
 
 --sample memory write
-p_sample_memory: process (clk, rst, we_sample_mem, wdata_sample, waddr_sample)
+p_sample_memory: process (clk, we_sample_mem, wdata_sample, waddr_sample)
 begin
     if rising_edge(clk) then
         if we_sample_mem = '1' then
