@@ -30,22 +30,26 @@ use IEEE.NUMERIC_STD.ALL;
 --use UNISIM.VComponents.all;
 
 entity control is
-    Port (  clk, rst, RQ, CFG   : in STD_LOGIC;
-            input,
-            rdata_sample,
-            wreg_c              : in std_logic_vector(c_data_w-1 downto 0);
-            GNT, RDY,
-            we_sample_mem,
-            we_coeff_mem,
-            en_1st_stage,
+    Port (  clk                 : in STD_LOGIC;
+            rst                 : in STD_LOGIC;
+            RQ                  : in STD_LOGIC;
+            CFG                 : in STD_LOGIC;
+            input               : in signed(c_data_w-1 downto 0);
+            rdata_sample        : in signed(c_data_w-1 downto 0);
+            wreg_c              : in signed(c_data_w-1 downto 0);
+            GNT                 : out STD_LOGIC;
+            RDY                 : out STD_LOGIC;
+            we_sample_mem       : out STD_LOGIC;
+            we_coeff_mem        : out STD_LOGIC;
+            en_1st_stage        : out STD_LOGIC;
             en_acc              : out STD_LOGIC;
-            raddr_sample,
-            waddr_sample : out std_logic_vector(c_len_cnt_section+c_len_cnt_sample-1 downto 0);        
-            raddr_coeff,
-            waddr_coeff : out std_logic_vector(c_len_cnt_section+c_len_cnt_coeff-1 downto 0);
-            wdata_sample,
-            wdata_coeff,
-            output              : out std_logic_vector(c_data_w-1 downto 0)
+            raddr_sample : out unsigned(c_len_cnt_section+c_len_cnt_sample-1 downto 0);
+            waddr_sample : out unsigned(c_len_cnt_section+c_len_cnt_sample-1 downto 0);        
+            raddr_coeff  : out unsigned(c_len_cnt_section+c_len_cnt_coeff-1 downto 0);
+            waddr_coeff  : out unsigned(c_len_cnt_section+c_len_cnt_coeff-1 downto 0);
+            wdata_sample        : out signed(c_data_w-1 downto 0);
+            wdata_coeff         : out signed(c_data_w-1 downto 0);
+            output              : out signed(c_data_w-1 downto 0)
         );
 end control;
 
@@ -56,20 +60,9 @@ architecture rtl of control is
 type t_state is (idle, init, run);
 -------------------------------------------------------------------------------------------------
 --signals----------------------------------------------------------------------------------------
--------------------------------------------------------------------------------------------------
---SRAM
---read and write signals
-signal wdata_sample_int, wdata_coeff_int, rdata_sample_int
-    : signed(c_data_w-1 downto 0);
-
-signal waddr_sample_int, raddr_sample_int
-    : unsigned(c_len_cnt_section+c_len_cnt_sample-1 downto 0);
-
-signal waddr_coeff_int, raddr_coeff_int
-    : unsigned(c_len_cnt_section+c_len_cnt_coeff-1 downto 0);
-
+-------------------------------------------------------------------------------------------------;
 --internal memory
-signal wreg_c_int, wreg0_s, wreg1_s : signed(c_data_w-1 downto 0);
+signal wreg0_s, wreg1_s : signed(c_data_w-1 downto 0);
 
 --FSM
 signal state, next_state : t_state := idle;
@@ -82,19 +75,7 @@ signal cnt_sample :  unsigned(c_len_cnt_sample-1 downto 0);
 signal cnt_section_c, cnt_section_s : unsigned(c_len_cnt_section-1 downto 0);
 -------------------------------------------------------------------------------------------------
 begin
-p_signal_asignment:
---sample memory
-raddr_sample <= std_logic_vector(raddr_sample_int);
-rdata_sample_int <= signed(rdata_sample);
-waddr_sample <= std_logic_vector(waddr_sample_int);
-wdata_sample <= std_logic_vector(wdata_sample_int);
---coefficient memory
-raddr_coeff <= std_logic_vector(raddr_coeff_int);
-waddr_coeff <= std_logic_vector(waddr_coeff_int);
-wdata_coeff <= std_logic_vector(wdata_coeff_int);
-wreg_c_int <= signed(wreg_c);
-
-p_reg: process (clk, rst)
+p_reg: process (clk)
 begin
     if rising_edge(clk) then
         --SYNCHRONOUS RESET
@@ -114,7 +95,7 @@ begin
             state <= next_state;
             --output registers
             if RDY_c = '1' then --temporary output
-                output <= std_logic_vector(wreg1_s);
+                output <= wreg1_s;
             end if;
             --granted signal - data recieved
             if GNT_c = '1' then
@@ -136,14 +117,13 @@ begin
             cnt_section_s <= cnt_section_c;
             --internal memory registers
             if en_new_delay = '1' AND en_init = '0' then
-                wreg0_s <= wreg_c_int; --stores 1st section result
+                wreg0_s <= wreg_c; --stores 1st section result
             end if;
             if en_init = '0' then
-                --TODO: use enable signals to split combinational and sequential?
                 if en_old_delay = '1' then
-                    wreg1_s <= rdata_sample_int; --stores old delay
+                    wreg1_s <= rdata_sample; --stores old delay
                 elsif en_result = '1' then
-                    wreg1_s <= wreg_c_int; --stores section result
+                    wreg1_s <= wreg_c; --stores section result
                 end if;
             end if;
         end if;
@@ -203,21 +183,22 @@ begin
     en_new_delay <= '0';
     en_result <= '0';
     --signals
-    wdata_sample_int <= (others => '0');
-    waddr_sample_int <= (others => '0');
-    raddr_sample_int <= (others => '0');
-    wdata_coeff_int <= (others => '0');
-    waddr_coeff_int <= (others => '0');
-    raddr_coeff_int <= (others => '0');
+    wdata_sample <= (others => '0');
+    waddr_sample <= (others => '0');
+    raddr_sample <= (others => '0');
+    wdata_coeff <= (others => '0');
+    waddr_coeff <= (others => '0');
+    raddr_coeff <= (others => '0');
         
     case (state) is
 
         when idle => --wait for new data or initialization
+            --TODO: přístup k paměti pro uživatele -> data + we
             if RQ_s = '1' then --data valid
                 GNT_c <= '1';
                 we_sample_mem <= '1';
-                wdata_sample_int <= signed(input);
-                waddr_sample_int <= (others => '0');
+                wdata_sample <= input;
+                waddr_sample <= (others => '0');
                 next_state <= run;
             elsif CFG_s = '1' then
                 next_state <= init;
@@ -229,11 +210,11 @@ begin
             en_init <= '1';
             en_cnt_coeff <= '1';
             en_cnt_section <= '1';
-            wdata_coeff_int <= signed(input);
-            wdata_sample_int <= (others => '0');
-            waddr_coeff_int <= cnt_section_s & cnt_coeff_s;
+            wdata_coeff <= input;
+            wdata_sample <= (others => '0');
+            waddr_coeff <= cnt_section_s & cnt_coeff_s;
             --cnt_coeff chosen to reach all memory addresses (cnt_sample only goes to 2)
-            waddr_sample_int <= cnt_section_s & cnt_coeff_s(1 downto 0);
+            waddr_sample <= cnt_section_s & cnt_coeff_s(1 downto 0);
             we_coeff_mem <= '1';
             we_sample_mem <= '1';
             --increment section counter after writing all section coefficients
@@ -267,8 +248,8 @@ begin
                 en_result <= '1';
             end if;
             --select coresponding addresses
-            raddr_coeff_int <= cnt_section_s & cnt_coeff_s;
-            raddr_sample_int <= cnt_section_s & cnt_sample;
+            raddr_coeff <= cnt_section_s & cnt_coeff_s;
+            raddr_sample <= cnt_section_s & cnt_sample;
             --rewrite memory with new data while waiting for wreg1_s
             if cnt_coeff_s >= 5 then --write enable when new delay is ready in wreg0_s
                 we_sample_mem <= '1';
@@ -276,11 +257,11 @@ begin
 
             next_state <= run;
             if cnt_coeff_s = 5 then
-                waddr_sample_int <= cnt_section_s & "01"; --delay(0) <= new_delay
-                wdata_sample_int <= wreg0_s;
+                waddr_sample <= cnt_section_s & "01"; --delay(0) <= new_delay
+                wdata_sample <= wreg0_s;
             elsif cnt_coeff_s = 6 then
-                waddr_sample_int <= cnt_section_s & "10"; --delay(1) <= delay(0)
-                wdata_sample_int <= wreg1_s;
+                waddr_sample <= cnt_section_s & "10"; --delay(1) <= delay(0)
+                wdata_sample <= wreg1_s;
             elsif cnt_coeff_s = 7 then
                 en_section_end <= '1';
                 --if on last section, go to idle
@@ -288,9 +269,9 @@ begin
                     RDY_c <= '1';
                     next_state <= idle;
                 else --else write section output to next section input
-                    waddr_sample_int <= 
-                        shift_left(resize(cnt_section_s, waddr_sample_int'length), 2) + 4; 
-                    wdata_sample_int <= wreg1_s;
+                    waddr_sample <= 
+                        shift_left(resize(cnt_section_s, waddr_sample'length), 2) + 4; 
+                    wdata_sample <= wreg1_s;
                 end if;
             end if;
 

@@ -36,8 +36,8 @@ constant c_len_coeff_mem : integer := c_f_order/c_s_order * 2**c_len_cnt_coeff;
 constant c_len_cnt_init : integer := integer(ceil(log2(real(c_len_coeff_mem))));
 
 --types
-type t_sample_mem is array (0 to c_len_sample_mem-1) of std_logic_vector(c_data_w-1 downto 0); --sram
-type t_coeff_mem is array (0 to c_len_coeff_mem-1) of std_logic_vector(c_data_w-1 downto 0);
+type t_sample_mem is array (0 to c_len_sample_mem-1) of signed(c_data_w-1 downto 0); --sram
+type t_coeff_mem is array (0 to c_len_coeff_mem-1) of signed(c_data_w-1 downto 0);
     --coefficient memory
 
 --functions

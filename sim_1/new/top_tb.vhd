@@ -21,7 +21,7 @@ architecture bench of control_tb is
   signal GNT, RDY : STD_LOGIC;
   signal output : std_logic_vector(c_data_w-1 downto 0);
 
-  constant clock_period: time := 25 ns;
+  constant clock_period: time := 10 ns;
   signal stop_the_clock: boolean;
 
   signal test_fail : boolean;
@@ -55,13 +55,13 @@ begin
     cnt_err <= 0; 
     data_expeced_log <= (others => '0');
     RQ     <= '0';
-    CFG    <= '1';
+    CFG    <= '0';
     input  <= (others => '0');
     rst <= '1';
-    wait for 5 ns;
+    wait for clock_period;
     rst <= '0';
-    wait for 5 ns;
-
+    wait for clock_period;
+    CFG    <= '1';
     -- Put test bench stimulus code here
 ---------------------------------------------------------------------------------------------------------
 --MEMORY INIT---------------------------------------------------------------------------------------------
@@ -77,17 +77,18 @@ begin
     end loop;
     input <= (others => '0');
     report "loading coefficients (DONE)";
-    wait for clock_period * 5;
+    --wait for clock_period * 5;
 ---------------------------------------------------------------------------------------------------------
 --TEST START---------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------
     report "test start";
     for i in 0 to c_len_filter_data loop
       input <= filter_in_data(i);
+      wait until rising_edge(clk);
       RQ <= '1';
-      wait on GNT; --sample recieved
+      wait until rising_edge(clk) AND GNT = '1'; --sample recieved
       RQ <= '0';
-      wait on RDY;
+      wait until rising_edge(clk) AND RDY = '1';
       data_expeced_log <= filter_out_expected(i); --expected data waveform
       --compare output to expected
       if (Is_X(output) OR abs(signed(output)  - signed(filter_out_expected(i))) > 15) then

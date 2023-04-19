@@ -29,12 +29,13 @@ use IEEE.NUMERIC_STD.ALL;
 --use UNISIM.VComponents.all;
 
 entity au is
-    Port (  clk, rst,
-            en_acc,
+    Port (  clk                 : in STD_LOGIC;
+            rst                 : in STD_LOGIC;
+            en_acc              : in STD_LOGIC;
             en_1st_stage        : in STD_LOGIC;
-            rdata_sample,
-            rdata_coeff         : in std_logic_vector(c_data_w-1 downto 0);
-            wreg_c              : out std_logic_vector(c_data_w-1 downto 0)
+            rdata_sample        : in signed(c_data_w-1 downto 0);
+            rdata_coeff         : in signed(c_data_w-1 downto 0);
+            wreg_c              : out signed(c_data_w-1 downto 0)
         );
 end au;
 
@@ -51,10 +52,9 @@ type t_state is (idle, init, run);
 signal mul_pipe_c, mul_pipe_s : signed(c_mul_w-1 downto 0);
 signal acc_c, acc_s : signed(c_acc_w-1 downto 0);
 signal acc : signed(c_acc_w downto 0);
-signal wreg_c_int : signed(c_data_w-1 downto 0);
 -------------------------------------------------------------------------------------------------
 begin
-p_reg: process (clk, rst)
+p_reg: process (clk)
 begin
     if rising_edge(clk) then
         if rst = '1' then
@@ -74,10 +74,10 @@ begin
     end if;
 end process;
 
-p_mul: mul_pipe_c <= signed(rdata_sample) * signed(rdata_coeff);
+p_mul: mul_pipe_c <= rdata_sample * rdata_coeff;
 
 p_acc: process(en_1st_stage, acc_s, mul_pipe_s)
-begin --TODO create enable signal in control block
+begin
     if en_1st_stage = '1' then -- subtract wreg1_ss of a2 and a3 products
         acc <= resize(acc_s, c_acc_w + 1) - resize(mul_pipe_s, c_acc_w + 1);
     else      
@@ -92,11 +92,11 @@ p_acc_overflow: acc_c <=    ('0'&(c_acc_w-2 downto 0 => '1')) --positive saturat
                             when ((acc(c_acc_w) = '1') AND (acc(c_acc_w-1) /= '1')) else
                             acc(c_acc_w-1 downto 0);
 
-p_wreg: wreg_c_int <=   ('0'&(c_data_w-2 downto 0 => '1')) --positive saturation
+p_wreg: wreg_c <=   ('0'&(c_data_w-2 downto 0 => '1')) --positive saturation
             when ((acc(c_acc_w) = '0') AND (acc(c_acc_w-1 downto c_wreg_high) /= 0)) else
             ('1'&(c_data_w-2 downto 0 => '0')) --negative saturation
             when ((acc(c_acc_w) = '1') AND (acc(c_acc_w-1 downto c_wreg_high) /= c_neg_one)) else
             acc(c_wreg_high downto c_wreg_low);
 
-wreg_c <= std_logic_vector(wreg_c_int);
+
 end rtl;
