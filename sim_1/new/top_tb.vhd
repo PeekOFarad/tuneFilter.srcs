@@ -10,16 +10,23 @@ end;
 architecture bench of control_tb is
 
   component top
-      Port (  clk, rst, RQ, CFG : in STD_LOGIC;
-              input             : in std_logic_vector(c_data_w-1 downto 0);
-              GNT, RDY          : out STD_LOGIC;
-              output            : out std_logic_vector(c_data_w-1 downto 0));
+    Port (  clk                 : in STD_LOGIC;
+            rst                 : in STD_LOGIC;
+            RQ                  : in STD_LOGIC;
+            CFG                 : in STD_LOGIC;
+            input               : in std_logic_vector(c_data_w-1 downto 0);
+            waddr_coeff_in      : in unsigned(c_len_cnt_section+c_len_cnt_coeff-1 downto 0);
+            GNT                 : out STD_LOGIC;
+            RDY                 : out STD_LOGIC;
+            output              : out std_logic_vector(c_data_w-1 downto 0)
+        );
   end component;
 
   signal clk, rst, RQ, CFG : STD_LOGIC;
   signal input : std_logic_vector(c_data_w-1 downto 0);
   signal GNT, RDY : STD_LOGIC;
   signal output : std_logic_vector(c_data_w-1 downto 0);
+  signal waddr_coeff_in : unsigned(c_len_cnt_section+c_len_cnt_coeff-1 downto 0);
 
   constant clock_period: time := 10 ns;
   signal stop_the_clock: boolean;
@@ -38,11 +45,12 @@ architecture bench of control_tb is
 
 begin
 
-  uut: top port map ( clk    => clk,
+  uut: top port map (     clk    => clk,
                           rst    => rst,
                           RQ     => RQ,
                           CFG    => CFG,
                           input  => input,
+                          waddr_coeff_in => waddr_coeff_in,
                           GNT    => GNT,
                           RDY    => RDY,
                           output => output );
@@ -54,6 +62,8 @@ begin
     test_fail <= false;
     cnt_err <= 0; 
     data_expeced_log <= (others => '0');
+    input <= (others => '0');
+    waddr_coeff_in <= (others => '0');
     RQ     <= '0';
     CFG    <= '0';
     input  <= (others => '0');
@@ -61,19 +71,19 @@ begin
     wait for clock_period;
     rst <= '0';
     wait for clock_period;
-    CFG    <= '1';
     -- Put test bench stimulus code here
----------------------------------------------------------------------------------------------------------
---MEMORY INIT---------------------------------------------------------------------------------------------
----------------------------------------------------------------------------------------------------------
-    wait until clk = '1';
+-------------------------------------------------------------------------------------------------
+--MEMORY INIT------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------
+    wait until rising_edge(clk) AND RDY = '1';
     report "loading coefficients";
-    CFG <= '1';
-    wait for clock_period;
-    CFG <= '0';
     for j in 0 to c_len_coeff_mem-1 loop
+      wait until rising_edge(clk);
+      waddr_coeff_in <= to_unsigned(j, waddr_coeff_in'length);
       input <= std_logic_vector(c_coeff_mem_init(j));
-      wait on clk until clk = '1';
+      CFG <= '1';
+      wait until rising_edge(clk);
+      CFG <= '0';
     end loop;
     input <= (others => '0');
     report "loading coefficients (DONE)";

@@ -37,9 +37,11 @@ entity top is
             RQ                  : in STD_LOGIC;
             CFG                 : in STD_LOGIC;
             input               : in std_logic_vector(c_data_w-1 downto 0);
+            waddr_coeff_in      : in unsigned(c_len_cnt_section+c_len_cnt_coeff-1 downto 0);
             GNT                 : out STD_LOGIC;
             RDY                 : out STD_LOGIC;
-            output              : out std_logic_vector(c_data_w-1 downto 0));
+            output              : out std_logic_vector(c_data_w-1 downto 0)
+      );
 end entity top;
 
 architecture structural of top is
@@ -54,7 +56,7 @@ signal waddr_sample   : unsigned(c_len_cnt_section+c_len_cnt_sample-1 downto 0);
 signal raddr_sample   : unsigned(c_len_cnt_section+c_len_cnt_sample-1 downto 0);
 signal waddr_coeff    : unsigned(c_len_cnt_section+c_len_cnt_coeff-1 downto 0);
 signal raddr_coeff    : unsigned(c_len_cnt_section+c_len_cnt_coeff-1 downto 0);
-signal we_sample_mem, we_coeff_mem, en_1st_stage, en_acc : std_logic;
+signal we_sample_mem, we_coeff_mem, en_1st_stage, en_acc, en_calc : std_logic;
 
 begin
 
@@ -69,12 +71,14 @@ i0_control: entity work.control(rtl)
     input => signed(input),
     rdata_sample => rdata_sample,
     wreg_c => wreg_c,
+    waddr_coeff_in => waddr_coeff_in,
     GNT => GNT,
     RDY => RDY,
     we_sample_mem => we_sample_mem,
     we_coeff_mem => we_coeff_mem,
     en_1st_stage => en_1st_stage,
     en_acc => en_acc,
+    en_calc => en_calc,
     raddr_sample => raddr_sample,
     waddr_sample => waddr_sample,
     raddr_coeff => raddr_coeff,
@@ -89,26 +93,12 @@ i0_AU: entity work.au(rtl)
     clk => clk,
     rst => rst,
     en_acc => en_acc,
+    en_calc => en_calc,
     en_1st_stage => en_1st_stage,
     rdata_sample => rdata_sample,
     rdata_coeff => rdata_coeff,
     wreg_c => wreg_c
   );
-
--- i0_RAM: entity work.ram(rtl)
---   port map (
---     clk => clk,            
---     we_sample_mem => we_sample_mem,
---     we_coeff_mem => we_coeff_mem,        
---     raddr_sample => raddr_sample,
---     waddr_sample => waddr_sample,
---     wdata_sample => wdata_sample,
---     raddr_coeff => raddr_coeff,
---     waddr_coeff => waddr_coeff,
---     wdata_coeff => wdata_coeff,
---     rdata_coeff => rdata_coeff,
---     rdata_sample => rdata_sample
---   );
 
 i0_RAM:  entity work.g_ram(rtl)
     generic map (

@@ -33,6 +33,7 @@ entity au is
             rst                 : in STD_LOGIC;
             en_acc              : in STD_LOGIC;
             en_1st_stage        : in STD_LOGIC;
+            en_calc             : in STD_LOGIC;
             rdata_sample        : in signed(c_data_w-1 downto 0);
             rdata_coeff         : in signed(c_data_w-1 downto 0);
             wreg_c              : out signed(c_data_w-1 downto 0)
@@ -74,7 +75,8 @@ begin
     end if;
 end process;
 
-p_mul: mul_pipe_c <= rdata_sample * rdata_coeff;
+p_mul: mul_pipe_c <=    rdata_sample * rdata_coeff when en_calc = '1' else
+                        (others => '0');
 
 p_acc: process(en_1st_stage, acc_s, mul_pipe_s)
 begin
