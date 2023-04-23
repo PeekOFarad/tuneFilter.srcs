@@ -34,10 +34,12 @@ use UNIMACRO.vcomponents.all;
 entity top is
   Port (    clk                 : in STD_LOGIC;
             rst                 : in STD_LOGIC;
+            
+            --link signals
             RQ                  : in STD_LOGIC;
             CFG                 : in STD_LOGIC;
             input               : in std_logic_vector(c_data_w-1 downto 0);
-            waddr_coeff_in      : in unsigned(c_len_cnt_section+c_len_cnt_coeff-1 downto 0);
+            waddr_coeff_in      : in std_logic_vector(c_coeff_addr_w-1 downto 0);
             GNT                 : out STD_LOGIC;
             RDY                 : out STD_LOGIC;
             output              : out std_logic_vector(c_data_w-1 downto 0)
@@ -52,10 +54,10 @@ signal rdata_sample   : signed(c_data_w-1 downto 0);
 signal rdata_coeff    : signed(c_data_w-1 downto 0);
 signal wreg_c         : signed(c_data_w-1 downto 0);
 signal output_int     : signed(c_data_w-1 downto 0);
-signal waddr_sample   : unsigned(c_len_cnt_section+c_len_cnt_sample-1 downto 0);
-signal raddr_sample   : unsigned(c_len_cnt_section+c_len_cnt_sample-1 downto 0);
-signal waddr_coeff    : unsigned(c_len_cnt_section+c_len_cnt_coeff-1 downto 0);
-signal raddr_coeff    : unsigned(c_len_cnt_section+c_len_cnt_coeff-1 downto 0);
+signal waddr_sample   : unsigned(c_sample_addr_w-1 downto 0);
+signal raddr_sample   : unsigned(c_sample_addr_w-1 downto 0);
+signal waddr_coeff    : unsigned(c_coeff_addr_w-1 downto 0);
+signal raddr_coeff    : unsigned(c_coeff_addr_w-1 downto 0);
 signal we_sample_mem, we_coeff_mem, en_1st_stage, en_acc, en_calc : std_logic;
 
 begin
@@ -71,7 +73,7 @@ i0_control: entity work.control(rtl)
     input => signed(input),
     rdata_sample => rdata_sample,
     wreg_c => wreg_c,
-    waddr_coeff_in => waddr_coeff_in,
+    waddr_coeff_in => unsigned(waddr_coeff_in),
     GNT => GNT,
     RDY => RDY,
     we_sample_mem => we_sample_mem,
@@ -102,7 +104,7 @@ i0_AU: entity work.au(rtl)
 
 i0_RAM:  entity work.g_ram(rtl)
     generic map (
-      c_addr_w  => c_len_cnt_section+c_len_cnt_sample,
+      c_addr_w  => c_sample_addr_w,
       c_len_mem => c_len_sample_mem
     )
     port map (
@@ -116,7 +118,7 @@ i0_RAM:  entity work.g_ram(rtl)
 
 i1_RAM:  entity work.g_ram(rtl)
     generic map (
-      c_addr_w  => c_len_cnt_section+c_len_cnt_coeff,
+      c_addr_w  => c_coeff_addr_w,
       c_len_mem => c_len_coeff_mem
     )
     port map (

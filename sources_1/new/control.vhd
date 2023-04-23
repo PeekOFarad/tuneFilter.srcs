@@ -37,7 +37,7 @@ entity control is
             input               : in signed(c_data_w-1 downto 0);
             rdata_sample        : in signed(c_data_w-1 downto 0);
             wreg_c              : in signed(c_data_w-1 downto 0);
-            waddr_coeff_in  : in unsigned(c_len_cnt_section+c_len_cnt_coeff-1 downto 0);
+            waddr_coeff_in      : in unsigned(c_coeff_addr_w-1 downto 0);
             GNT                 : out STD_LOGIC;
             RDY                 : out STD_LOGIC;
             we_sample_mem       : out STD_LOGIC;
@@ -45,10 +45,10 @@ entity control is
             en_1st_stage        : out STD_LOGIC;
             en_acc              : out STD_LOGIC;
             en_calc             : out STD_LOGIC;
-            raddr_sample : out unsigned(c_len_cnt_section+c_len_cnt_sample-1 downto 0);
-            waddr_sample : out unsigned(c_len_cnt_section+c_len_cnt_sample-1 downto 0);        
-            raddr_coeff  : out unsigned(c_len_cnt_section+c_len_cnt_coeff-1 downto 0);
-            waddr_coeff  : out unsigned(c_len_cnt_section+c_len_cnt_coeff-1 downto 0);
+            raddr_sample        : out unsigned(c_sample_addr_w-1 downto 0);
+            waddr_sample        : out unsigned(c_sample_addr_w-1 downto 0);        
+            raddr_coeff         : out unsigned(c_coeff_addr_w-1 downto 0);
+            waddr_coeff         : out unsigned(c_coeff_addr_w-1 downto 0);
             wdata_sample        : out signed(c_data_w-1 downto 0);
             wdata_coeff         : out signed(c_data_w-1 downto 0);
             output              : out signed(c_data_w-1 downto 0)
@@ -204,6 +204,7 @@ begin
             --TODO: přístup k paměti pro uživatele -> data + we
             next_state <= idle;
             if CFG_s = '1' AND flag_init_s = '0' then
+                --GNT_c <= '1';
                 we_coeff_mem <= '1';
                 waddr_coeff <= waddr_coeff_in;
                 wdata_coeff <= input;

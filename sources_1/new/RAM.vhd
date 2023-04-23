@@ -34,8 +34,8 @@ entity ram is
             we_coeff_mem    : in STD_LOGIC;
             raddr_sample    : in unsigned(c_len_cnt_section+c_len_cnt_sample-1 downto 0);
             waddr_sample    : in unsigned(c_len_cnt_section+c_len_cnt_sample-1 downto 0);
-            raddr_coeff     : in unsigned(c_len_cnt_section+c_len_cnt_coeff-1 downto 0);     
-            waddr_coeff     : in unsigned(c_len_cnt_section+c_len_cnt_coeff-1 downto 0);
+            raddr_coeff     : in unsigned(c_coeff_addr_w-1 downto 0);     
+            waddr_coeff     : in unsigned(c_coeff_addr_w-1 downto 0);
             wdata_sample    : in signed(c_data_w-1 downto 0);
             wdata_coeff     : in signed(c_data_w-1 downto 0);
             rdata_coeff     : out signed(c_data_w-1 downto 0);
