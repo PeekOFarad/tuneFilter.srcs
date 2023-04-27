@@ -40,7 +40,11 @@ for i = 1:m
     for j = 1:8
         x = y(i,j);
         x_sfi = sfi(x, c_data_w, c_len_frac);
-        fprintf(fID, '%s\n', x_sfi.bin);
+        if i == m && j == 8
+            fprintf(fID, '%s', x_sfi.bin);
+        else
+            fprintf(fID, '%s\n', x_sfi.bin);
+        end
     end
 end
 fclose(fID);
