@@ -13,16 +13,16 @@ USE IEEE.numeric_std.ALL;
 use IEEE.math_real.all;
 
 PACKAGE filter_data_pkg IS
-  constant c_len_filter_data : integer := 3435; --insert number from matlab tb
-  TYPE filter_data_type IS ARRAY (0 TO c_len_filter_data) OF std_logic_vector(15 DOWNTO 0);
-  CONSTANT filter_in_data : filter_data_type;
-  CONSTANT filter_out_expected : filter_data_type;
+  constant c_len_test_vector : integer := 1 + 3435; --1 + "insert number from matlab tb"
+  TYPE t_test_vector IS ARRAY (0 TO c_len_test_vector-1) OF std_logic_vector(15 DOWNTO 0);
+  CONSTANT test_vector : t_test_vector;
+  CONSTANT ref_vector : t_test_vector;
   
 END filter_data_pkg;
 
 PACKAGE BODY filter_data_pkg IS
 
-  CONSTANT filter_in_data : filter_data_type :=
+  CONSTANT test_vector : t_test_vector :=
     (
          X"2000",
          X"0000",
@@ -3461,7 +3461,7 @@ PACKAGE BODY filter_data_pkg IS
          X"0000",
          X"0000");
 
-  CONSTANT filter_out_expected : filter_data_type :=
+  CONSTANT ref_vector : t_test_vector :=
     (
          X"00ef",--00ef = 0
          X"05fd",--05fe = +1

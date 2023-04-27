@@ -18,7 +18,7 @@
 --
 ----------------------------------------------------------------------------------
 
-library ieee;
+library ieee, work;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 use work.tuneFilter_pkg.all;
@@ -39,7 +39,7 @@ entity top is
             RQ                  : in STD_LOGIC;
             CFG                 : in STD_LOGIC;
             input               : in std_logic_vector(c_data_w-1 downto 0);
-            waddr_coeff_in      : in std_logic_vector(c_coeff_addr_w-1 downto 0);
+            waddr_coeff      : in std_logic_vector(c_coeff_addr_w-1 downto 0);
             GNT                 : out STD_LOGIC;
             RDY                 : out STD_LOGIC;
             output              : out std_logic_vector(c_data_w-1 downto 0)
@@ -56,7 +56,7 @@ signal wreg_c         : signed(c_data_w-1 downto 0);
 signal output_int     : signed(c_data_w-1 downto 0);
 signal waddr_sample   : unsigned(c_sample_addr_w-1 downto 0);
 signal raddr_sample   : unsigned(c_sample_addr_w-1 downto 0);
-signal waddr_coeff    : unsigned(c_coeff_addr_w-1 downto 0);
+signal waddr_coeff_int: unsigned(c_coeff_addr_w-1 downto 0);
 signal raddr_coeff    : unsigned(c_coeff_addr_w-1 downto 0);
 signal we_sample_mem, we_coeff_mem, en_1st_stage, en_acc, en_calc : std_logic;
 
@@ -73,7 +73,7 @@ i0_control: entity work.control(rtl)
     input => signed(input),
     rdata_sample => rdata_sample,
     wreg_c => wreg_c,
-    waddr_coeff_in => unsigned(waddr_coeff_in),
+    waddr_coeff => unsigned(waddr_coeff),
     GNT => GNT,
     RDY => RDY,
     we_sample_mem => we_sample_mem,
@@ -84,7 +84,7 @@ i0_control: entity work.control(rtl)
     raddr_sample => raddr_sample,
     waddr_sample => waddr_sample,
     raddr_coeff => raddr_coeff,
-    waddr_coeff => waddr_coeff,
+    waddr_coeff_int => waddr_coeff_int,
     wdata_sample => wdata_sample,
     wdata_coeff => wdata_coeff,
     output => output_int
@@ -125,7 +125,7 @@ i1_RAM:  entity work.g_ram(rtl)
       clk   => clk,
       we    => we_coeff_mem,
       raddr => raddr_coeff,
-      waddr => waddr_coeff,
+      waddr => waddr_coeff_int,
       rdata => rdata_coeff,
       wdata => wdata_coeff
     );

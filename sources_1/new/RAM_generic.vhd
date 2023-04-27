@@ -18,7 +18,7 @@
 -- 
 -------------------------------------------------------------------------------------------------
 
-library IEEE;
+library IEEE, work;
 use IEEE.STD_LOGIC_1164.ALL;
 use work.tuneFilter_pkg.all;
 use IEEE.NUMERIC_STD.ALL;
@@ -39,7 +39,7 @@ entity g_ram is
             waddr   : in unsigned(c_addr_w-1 downto 0);
             rdata   : out signed(c_data_w-1 downto 0);
             wdata   : in signed(c_data_w-1 downto 0)  
-        );
+    );
 end g_ram;
 
 architecture rtl of g_ram is

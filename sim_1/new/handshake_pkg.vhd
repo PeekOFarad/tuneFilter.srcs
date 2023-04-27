@@ -18,14 +18,6 @@ package handshake_pkg is
    -- BFM Handle Array Type
    --type t_pkg_handleArray is array (natural range <>) of t_pkg_handle;
 
-   -- BFM Handle Type
-   type Handle is record
-      req      : std_logic;   -- driven by the test controller through the BFM's package
-      ack      : std_logic;   -- driven by the BFM
-      ready    : std_logic;   -- driven by the BFM
-      --idx      : std_logic_vector(15 downto 0);  -- remains constant; used to store the BFM index in the handle array
-   end record;
-
     -- send a request to the BFM (usable outside of the BFM)
    procedure bfm_send_request (
      signal   handle      : inout t_pkg_handle;
@@ -110,7 +102,7 @@ package body handshake_pkg is
       report "waiting ...";
       -- Wait for Request
       handle.ready <= '1';
-      report ("handle.ready = " & std_logic'image(handle.ready));
+      --report ("handle.ready = " & std_logic'image(handle.ready));
       wait until handle.req = '1';
       handle.ready <= '0';
       report ".... ready.";

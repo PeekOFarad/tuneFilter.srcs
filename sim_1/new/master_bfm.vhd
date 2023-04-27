@@ -1,4 +1,4 @@
-library IEEE;
+library IEEE, work;
 use IEEE.Std_logic_1164.all;
 use IEEE.Numeric_Std.all;
 use work.tuneFilter_pkg.all;
@@ -25,11 +25,15 @@ end entity;
 
 architecture behavioral of master_bfm is
 
+signal send_data_req    : boolean := false;
+signal send_data_ack    : boolean := false;
+signal sample_data      : std_logic_vector(c_data_w-1 downto 0);
+
 begin
     --in
-    bfm_handle.GNT <= GNT;
-    bfm_handle.RDY <= RDY;
-    bfm_handle.master_in <= master_in;
+    bfm_handle_in.GNT <= GNT;
+    bfm_handle_in.RDY <= RDY;
+    bfm_handle_in.master_in <= master_in;
     --out
     RQ <= bfm_handle.RQ;
     CFG <= bfm_handle.CFG;
@@ -41,36 +45,30 @@ begin
 --COMMAND PROCESS--------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------    
 p_cmd: process
-    variable op : t_op;
+    variable cmd : t_bfm_cmd;
 begin
 
-    -- RQ <= '0';
-    -- CFG <= '0'; 
-    -- waddr_coeff <= (others => '0');
-    -- master_out <= (others => '0');
-    
     pkg_handle.ack <= '0';
     report "BFM initialized";
     wait for 0 ns; --wait for delta cycle -> TODO: find out what the biscuit is a delta cycle
+                                        -- ANSWER:everything above happens "in parallel"?
 
     loop
-
+        --THIS RUNS IN PARALLEL
         bfm_wait_for_request(pkg_handle);
-        op := get_bfm_op;
+        cmd := get_bfm_cmd;
         bfm_ack_request(pkg_handle);
+        ------------------------------
         wait for 0 ns;
 
-        case op is
-            when send_data =>
-                null;
+        case cmd.op is
+            when test =>
+                report("---> Running test...");
+                run_test(bfm_handle, bfm_handle_in, cmd.test_vector, cmd.ref_vector);
 
-            when load_coeff =>
-                report("--->Writing coefficients...");
-                memory_init("cfg1.txt", bfm_handle);
-                wait for clk_period;
-
-            when monitor_slave_output =>
-                null;
+            when init =>
+                report("---> Writing coefficients...");
+                memory_init(bfm_handle, cmd.init_file);
                 
             when others =>
                 null;
@@ -79,12 +77,5 @@ begin
 
 
 end process;
--------------------------------------------------------------------------------------------------
---SEND DATA--------------------------------------------------------------------------------------
--------------------------------------------------------------------------------------------------
-
--------------------------------------------------------------------------------------------------
---SLAVE MONITOR----------------------------------------------------------------------------------
--------------------------------------------------------------------------------------------------
 
 end architecture;

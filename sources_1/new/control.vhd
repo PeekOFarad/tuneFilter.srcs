@@ -19,7 +19,7 @@
 -------------------------------------------------------------------------------------------------
 
 
-library IEEE;
+library IEEE, work;
 use IEEE.STD_LOGIC_1164.ALL;
 use work.tuneFilter_pkg.all;
 use IEEE.NUMERIC_STD.ALL;
@@ -37,7 +37,7 @@ entity control is
             input               : in signed(c_data_w-1 downto 0);
             rdata_sample        : in signed(c_data_w-1 downto 0);
             wreg_c              : in signed(c_data_w-1 downto 0);
-            waddr_coeff_in      : in unsigned(c_coeff_addr_w-1 downto 0);
+            waddr_coeff         : in unsigned(c_coeff_addr_w-1 downto 0);
             GNT                 : out STD_LOGIC;
             RDY                 : out STD_LOGIC;
             we_sample_mem       : out STD_LOGIC;
@@ -48,7 +48,7 @@ entity control is
             raddr_sample        : out unsigned(c_sample_addr_w-1 downto 0);
             waddr_sample        : out unsigned(c_sample_addr_w-1 downto 0);        
             raddr_coeff         : out unsigned(c_coeff_addr_w-1 downto 0);
-            waddr_coeff         : out unsigned(c_coeff_addr_w-1 downto 0);
+            waddr_coeff_int     : out unsigned(c_coeff_addr_w-1 downto 0);
             wdata_sample        : out signed(c_data_w-1 downto 0);
             wdata_coeff         : out signed(c_data_w-1 downto 0);
             output              : out signed(c_data_w-1 downto 0)
@@ -171,7 +171,7 @@ P_rst_flag: flag_init_c <=  flag_init_s when en_init_done = '0' else
                             '0' when en_init_done = '1';                
 
 p_fsm: process (state, RQ_s, CFG_s, input, cnt_sample, cnt_coeff_s,cnt_section_s, wreg0_s,
-                wreg1_s, waddr_coeff_in)
+                wreg1_s, waddr_coeff)
 begin
     --handshake
     GNT_c <= '0';
@@ -195,18 +195,16 @@ begin
     waddr_sample <= (others => '0');
     raddr_sample <= (others => '0');
     wdata_coeff <= (others => '0');
-    waddr_coeff <= (others => '0');
+    waddr_coeff_int <= (others => '0');
     raddr_coeff <= (others => '0');
         
     case (state) is
 
         when idle => --wait for new data or initialization
-            --TODO: přístup k paměti pro uživatele -> data + we
             next_state <= idle;
             if CFG_s = '1' AND flag_init_s = '0' then
-                --GNT_c <= '1';
                 we_coeff_mem <= '1';
-                waddr_coeff <= waddr_coeff_in;
+                waddr_coeff_int <= waddr_coeff;
                 wdata_coeff <= input;
             end if;
             if flag_init_s = '1' then
