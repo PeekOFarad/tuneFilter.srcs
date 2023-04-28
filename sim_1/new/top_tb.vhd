@@ -2,7 +2,7 @@ library IEEE, work;
 use IEEE.Std_logic_1164.all;
 use IEEE.Numeric_Std.all;
 use work.tuneFilter_pkg.all;
-use work.filter_data_pkg.all;
+--use work.filter_data_pkg.all;
 
 entity top_tb is
   generic (

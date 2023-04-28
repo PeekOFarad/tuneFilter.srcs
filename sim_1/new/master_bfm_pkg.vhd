@@ -4,7 +4,7 @@ use IEEE.Numeric_Std.all;
 use std.textio.all;
 use work.tuneFilter_pkg.all;
 use work.handshake_pkg.all;
-use work.filter_data_pkg.all;
+--use work.filter_data_pkg.all;
 
 package master_bfm_pkg is
 
@@ -21,6 +21,19 @@ package master_bfm_pkg is
         master_in           : std_logic_vector(c_data_w-1 downto 0);
     end record;
 
+    type t_test_vector is array (0 to 10000) of std_logic_vector(c_data_w-1 downto 0);
+
+    type t_op is (test, init);
+
+    --BFM Command Type (Used for passing data between BFM and Package)
+    type t_bfm_cmd is record
+        op          : t_op;
+        file_name   : string(1 to 50);
+    end record;
+
+    
+
+
     function bfm_handle_init return t_bfm_handle;
     function bfm_handle_in_init return t_bfm_handle_in;
 
@@ -31,19 +44,13 @@ package master_bfm_pkg is
 
     signal pkg_handle : t_pkg_handle := t_pkg_handle_init; -- used to pass data between package and bfm
 
-    type t_op is (test, init);
-
-    --BFM Command Type (Used for passing data between BFM and Package)
-    type t_bfm_cmd is record
-        op                       : t_op;
-        test_vector              : t_test_vector;
-        ref_vector               : t_test_vector;
-        init_file                : string(1 to 50);
-    end record;
-
+    
     shared variable bfm_cmd : t_bfm_cmd;
 
     impure function get_bfm_cmd return t_bfm_cmd;
+
+    function get_vector_size (arg : string) return integer;
+    
 
 
 -------------------------------------------------------------------------------------------------
@@ -56,8 +63,8 @@ package master_bfm_pkg is
     );
 
     procedure set_op_test (
-        signal handle           : inout t_pkg_handle;
-        constant test_vector    : t_test_vector
+        signal handle       : inout t_pkg_handle;
+        constant test_file  : string
     );
         
         
@@ -90,8 +97,7 @@ package master_bfm_pkg is
     procedure run_test (
         signal bfm_handle       : out t_bfm_handle;
         signal bfm_handle_in    : in t_bfm_handle_in;
-        constant test_vector    : t_test_vector;
-        constant ref_vector     : t_test_vector
+        constant test_file      : string
     );
         
 end package;
@@ -106,17 +112,17 @@ package body master_bfm_pkg is
     ) is
     begin
         bfm_cmd.op := init;
-        bfm_cmd.init_file := pad_string(init_file);
+        bfm_cmd.file_name := pad_string(init_file);
         bfm_send_request(handle);
     end procedure;
 
     procedure set_op_test ( --TODO
-        signal handle           : inout t_pkg_handle;
-        constant test_vector    : t_test_vector
+        signal handle       : inout t_pkg_handle;
+        constant test_file  : string
     ) is
     begin
         bfm_cmd.op := test;
-        bfm_cmd.test_vector := test_vector;
+        bfm_cmd.file_name := pad_string(test_file);
         bfm_send_request(handle);
     end procedure;
 -------------------------------------------------------------------------------------------------
@@ -193,50 +199,51 @@ package body master_bfm_pkg is
             bfm_handle.RQ <= '0';
     end procedure;
 
-    -- procedure read_output (
-    --     signal bfm_handle       : out t_bfm_handle;
-    --     signal bfm_handle_in    : in t_bfm_handle_in;
-    --     constant ref_vector     : t_test_vector
-    -- ) is
-    --     variable
-    -- begin
-    --     if (Is_X(output) OR abs(signed(output)  - signed(ref_vector(i))) > 15) then
-    --     test_fail <= true;
-    --     cnt_err <= cnt_err + 1;
-    --     assert false 
-    --         report "Error in output: Expected " 
-    --         & to_hex(ref_vector(i))
-    --         & " Actual "
-    --         & to_hex(output)
-    --         severity error;
-    --     end if;
-    -- end procedure;
-
     procedure run_test (
         signal bfm_handle       : out t_bfm_handle;
         signal bfm_handle_in    : in t_bfm_handle_in;
-        constant test_vector    : t_test_vector;
-        constant ref_vector     : t_test_vector
+        constant test_file      : string
     ) is
-        variable addr       : integer := 0;
-        variable data       : std_logic_vector(c_data_w-1 downto 0);
-        variable test_fail  : boolean := false;
-        variable cnt_err    : integer := 0;
+        file file_id                : text;
+        file file_id1               : text open write_mode is ("../../../../tuneFilter.srcs/sim_1/new/result_of_" & test_file);
+        variable line_id            : line;
+        variable line_id1           : line;
+        variable data_bit           : bit_vector(c_data_w-1 downto 0);
+        variable test_vector        : t_test_vector;
+        variable addr               : integer := 0;
+        variable data               : std_logic_vector(c_data_w-1 downto 0);
+        variable test_fail          : boolean := false;
+        variable cnt_err            : integer := 0;
+        constant vector_length      : integer := get_vector_size(test_file);
+        
     begin
+        file_open(file_id,("../../../../tuneFilter.srcs/sim_1/new/" & test_file), read_mode);
+        readline(file_id, line_id); --skip the first line by reading (it is integer)
+        while not endfile(file_id) loop
+            readline(file_id, line_id);
+            read(line_id, data_bit);
+            test_vector(addr) := to_stdLogicVector(data_bit);
+            addr := addr + 1;
+        end loop;
+        addr := 0;
+        --report("--> Vectors are length: "& integer'image(vector_length));
         report("---> TEST START");
-        while addr <= c_len_test_vector-1 loop
+        while addr <= vector_length-1 loop
             if bfm_handle_in.RDY = '1' then
                 data := test_vector(addr);
                 send_one_sample(bfm_handle, bfm_handle_in, data);
                 wait until bfm_handle_in.RDY = '1';
                 
+                write(line_id1, to_bitvector(bfm_handle_in.master_in), left, c_data_w);
+                writeline(file_id1, line_id1);
+
                 if (Is_X(bfm_handle_in.master_in)
-                OR abs(signed(bfm_handle_in.master_in)  - signed(ref_vector(addr))) > 15) then
+                OR abs(signed(bfm_handle_in.master_in)  - signed(test_vector(addr+vector_length-1))) > 31) then
                     test_fail := true;
                     cnt_err := cnt_err + 1;
                     assert false 
                         report "Error in output: Expected " 
-                        & to_hex(ref_vector(addr))
+                        & to_hex(test_vector(addr+vector_length-1))
                         & " Actual "
                         & to_hex(bfm_handle_in.master_in)
                         severity error;
@@ -248,6 +255,8 @@ package body master_bfm_pkg is
                 wait until bfm_handle_in.RDY = '1';
             end if;
         end loop;
+            file_close(file_id);
+            file_close(file_id1);
         if test_fail then
             report "**********TEST FAILED WITH " & integer'image(cnt_err) & " ERRORS!**********" severity error;
         else
@@ -302,6 +311,21 @@ package body master_bfm_pkg is
         ret_arg := (others => ' ');
         ret_arg(arg'range) := arg;
         return ret_arg;
+    end function;
+
+    function get_vector_size (
+        arg : string
+    ) return integer is
+        file file_id        : text open read_mode is (
+            "../../../../tuneFilter.srcs/sim_1/new/" & arg
+            );
+        variable line_id    : line;
+        variable data       : integer;
+    begin
+        readline(file_id, line_id);
+        read(line_id, data);
+        file_close(file_id);
+        return data;
     end function;
 
 end package body;

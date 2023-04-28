@@ -2,7 +2,7 @@ library IEEE, work;
 use IEEE.Std_logic_1164.all;
 use IEEE.Numeric_Std.all;
 use work.tuneFilter_pkg.all;
-use work.filter_data_pkg.all;
+--use work.filter_data_pkg.all;
 use work.master_bfm_pkg.all;
 use work.handshake_pkg.all;
 use std.textio.all;
@@ -64,11 +64,11 @@ begin
         case cmd.op is
             when test =>
                 report("---> Running test...");
-                run_test(bfm_handle, bfm_handle_in, cmd.test_vector, cmd.ref_vector);
+                run_test(bfm_handle, bfm_handle_in, cmd.file_name);
 
             when init =>
                 report("---> Writing coefficients...");
-                memory_init(bfm_handle, cmd.init_file);
+                memory_init(bfm_handle, cmd.file_name);
                 
             when others =>
                 null;
