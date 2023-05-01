@@ -1,23 +1,3 @@
--------------------------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
--- 
--- Create Date: 02/10/2023 10:02:35 AM
--- Design Name: 
--- Module Name: control - Behavioral
--- Project Name: 
--- Target Devices: 
--- Tool Versions: 
--- Description: 
--- 
--- Dependencies: 
--- 
--- Revision:
--- Revision 0.01 - File Created
--- Additional Comments:
--- 
--------------------------------------------------------------------------------------------------
-
 library IEEE, work;
 use IEEE.STD_LOGIC_1164.ALL;
 use work.tuneFilter_pkg.all;
@@ -34,6 +14,8 @@ entity au is
             en_acc              : in STD_LOGIC;
             en_1st_stage        : in STD_LOGIC;
             en_calc             : in STD_LOGIC;
+            en_scale            : in STD_LOGIC;
+            en_2nd_stage        : in STD_LOGIC;
             rdata_sample        : in signed(c_data_w-1 downto 0);
             rdata_coeff         : in signed(c_data_w-1 downto 0);
             wreg_c              : out signed(c_data_w-1 downto 0)
@@ -42,49 +24,68 @@ end au;
 
 architecture rtl of au is
 -------------------------------------------------------------------------------------------------
---types------------------------------------------------------------------------------------------
--------------------------------------------------------------------------------------------------
-type t_state is (idle, init, run);
--------------------------------------------------------------------------------------------------
 --signals----------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------
-
---arithmetics
-signal mul_pipe_c, mul_pipe_s : signed(c_mul_w-1 downto 0);
-signal acc_c, acc_s : signed(c_acc_w-1 downto 0);
-signal acc : signed(c_acc_w downto 0);
+signal prod_pipe_c          : signed(c_prod_w-1 downto 0);
+signal prod_pipe_s          : signed(c_prod_w-1 downto 0);
+signal prod_pipe_s_floored  : signed(c_prod_w-1 downto 0);
+signal acc_c                : signed(c_acc_w-1 downto 0);
+signal acc_s                : signed(c_acc_w-1 downto 0);
+signal acc_s_floored        : signed(c_acc_w-1 downto 0);
+signal acc                  : signed(c_acc_w downto 0);
 -------------------------------------------------------------------------------------------------
 begin
 p_reg: process (clk)
 begin
     if rising_edge(clk) then
         if rst = '1' then
-            mul_pipe_s <= (others => '0');
+            prod_pipe_s <= (others => '0');
             acc_s <= (others => '0');
         else
             --arithmetic regiters
-            mul_pipe_s <= mul_pipe_c;
-            if en_acc = '1' then --accumulator enable
+            prod_pipe_s <= prod_pipe_c;
+            if en_acc = '1' then --accuprodator enable
                 acc_s <= acc_c;
-                mul_pipe_s <= mul_pipe_c;
+                prod_pipe_s <= prod_pipe_c;
             else
                 acc_s <= (others => '0');
-                mul_pipe_s <= (others => '0');
+                prod_pipe_s <= (others => '0');
             end if;
         end if;
     end if;
 end process;
 
-p_mul: mul_pipe_c <=    rdata_sample * rdata_coeff when en_calc = '1' else
-                        (others => '0');
+p_prod: prod_pipe_c <= rdata_sample * rdata_coeff;
 
-p_acc: process(en_1st_stage, acc_s, mul_pipe_s)
+p_floor: acc_s_floored <= resize(acc_s(c_wreg_high downto c_wreg_low)
+                                &(c_wreg_low-1 downto 0 => '0'),c_acc_w);
+
+prod_pipe_s_floored <= resize(prod_pipe_s(c_wreg_high downto c_wreg_low)
+                             &(c_wreg_low-1 downto 0 => '0'),c_prod_w);
+
+p_acc: process(acc_s, prod_pipe_s, en_scale, en_1st_stage, en_2nd_stage)
+--no rounding------------------------------------------------------------------------------------
+-- begin
+--     if en_1st_stage = '1' then -- subtract wreg1_ss of a2 and a3 products
+--         acc <= resize(acc_s, c_acc_w + 1) - resize(prod_pipe_s, c_acc_w + 1);
+--     else      
+--         acc <= resize(acc_s, c_acc_w + 1) + resize(prod_pipe_s, c_acc_w + 1);
+--     end if;
+-- end process;
+-------------------------------------------------------------------------------------------------
+--floor round product of scale and 1st stage result----------------------------------------------
 begin
-    if en_1st_stage = '1' then -- subtract wreg1_ss of a2 and a3 products
-        acc <= resize(acc_s, c_acc_w + 1) - resize(mul_pipe_s, c_acc_w + 1);
-    else      
-        acc <= resize(acc_s, c_acc_w + 1) + resize(mul_pipe_s, c_acc_w + 1);
+    -- normal addition in 2nd stage
+    acc <= resize(acc_s, c_acc_w + 1) + resize(prod_pipe_s, c_acc_w + 1);
+    --rounding and subtraction
+    if en_scale = '1' then -- round prod to 13 frac bits after scale
+        acc <= resize(acc_s, c_acc_w + 1) + resize(prod_pipe_s_floored, c_acc_w+1);
+    elsif en_1st_stage = '1' then -- subtract in 1st stage
+        acc <= resize(acc_s, c_acc_w + 1) - resize(prod_pipe_s, c_acc_w + 1);
+    elsif en_2nd_stage = '1' then --round acc to 13 frac bits after 1st stage
+        acc <= resize(acc_s_floored, c_acc_w + 1) + resize(prod_pipe_s, c_acc_w + 1);
     end if;
+-------------------------------------------------------------------------------------------------
 end process;
 
 --saturation

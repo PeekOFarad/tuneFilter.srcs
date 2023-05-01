@@ -10,12 +10,12 @@ constant c_f_order : integer := 8; --filter order
 constant c_s_order : integer := 2; --section order
 constant c_data_w : integer := 16; --data width
 constant c_acc_w : integer := c_data_w*2+2; --accummulator width, default = 34
-constant c_mul_w : integer := c_data_w*2; --multiplier width, default = 32
+constant c_prod_w : integer := c_data_w*2; --multiplier width, default = 32
 constant c_len_data_frac : integer := 13; --coefficient fractional part length
 constant c_len_coeff_frac : integer := 13; --coefficient fractional part length
 constant c_len_acc_frac : integer := 26; --accummulator fractional part length
 constant c_len_mul_frac : integer := 26; --accummulator fractional part length
-constant c_len_mul_int : integer := c_mul_w-c_len_mul_frac; -- =6
+constant c_len_mul_int : integer := c_prod_w-c_len_mul_frac; -- =6
 constant c_wreg_high : integer := c_acc_w-(c_len_mul_int); -- 34-(32-26)=28, 
 constant c_wreg_low : integer := c_wreg_high-(c_data_w-1); -- =13
 constant c_neg_one : signed(c_len_mul_int-1 downto 0) 

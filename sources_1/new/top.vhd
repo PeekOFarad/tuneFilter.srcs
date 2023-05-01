@@ -1,23 +1,3 @@
-----------------------------------------------------------------------------------
--- Company:
--- Engineer:
---
--- Create Date: 02/10/2023 10:02:35 AM
--- Design Name:
--- Module Name: top - Behavioral
--- Project Name:
--- Target Devices:
--- Tool Versions:
--- Description:
---
--- Dependencies:
---
--- Revision:
--- Revision 0.01 - File Created
--- Additional Comments:
---
-----------------------------------------------------------------------------------
-
 library ieee, work;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -39,7 +19,7 @@ entity top is
             RQ                  : in STD_LOGIC;
             CFG                 : in STD_LOGIC;
             input               : in std_logic_vector(c_data_w-1 downto 0);
-            waddr_coeff      : in std_logic_vector(c_coeff_addr_w-1 downto 0);
+            waddr_coeff         : in std_logic_vector(c_coeff_addr_w-1 downto 0);
             GNT                 : out STD_LOGIC;
             RDY                 : out STD_LOGIC;
             output              : out std_logic_vector(c_data_w-1 downto 0)
@@ -58,7 +38,13 @@ signal waddr_sample   : unsigned(c_sample_addr_w-1 downto 0);
 signal raddr_sample   : unsigned(c_sample_addr_w-1 downto 0);
 signal waddr_coeff_int: unsigned(c_coeff_addr_w-1 downto 0);
 signal raddr_coeff    : unsigned(c_coeff_addr_w-1 downto 0);
-signal we_sample_mem, we_coeff_mem, en_1st_stage, en_acc, en_calc : std_logic;
+signal we_sample_mem  : std_logic;
+signal we_coeff_mem   : std_logic;
+signal en_1st_stage   : std_logic;
+signal en_acc         : std_logic;
+signal en_calc        : std_logic;
+signal en_2nd_stage   : std_logic;
+signal en_scale       : std_logic;
 
 begin
 
@@ -81,6 +67,8 @@ i0_control: entity work.control(rtl)
     en_1st_stage => en_1st_stage,
     en_acc => en_acc,
     en_calc => en_calc,
+    en_2nd_stage => en_2nd_stage,
+    en_scale => en_scale,
     raddr_sample => raddr_sample,
     waddr_sample => waddr_sample,
     raddr_coeff => raddr_coeff,
@@ -96,6 +84,8 @@ i0_AU: entity work.au(rtl)
     rst => rst,
     en_acc => en_acc,
     en_calc => en_calc,
+    en_2nd_stage => en_2nd_stage,
+    en_scale => en_scale,
     en_1st_stage => en_1st_stage,
     rdata_sample => rdata_sample,
     rdata_coeff => rdata_coeff,

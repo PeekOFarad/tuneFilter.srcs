@@ -1,24 +1,3 @@
--------------------------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
--- 
--- Create Date: 02/10/2023 10:02:35 AM
--- Design Name: 
--- Module Name: control - Behavioral
--- Project Name: 
--- Target Devices: 
--- Tool Versions: 
--- Description: 
--- 
--- Dependencies: 
--- 
--- Revision:
--- Revision 0.01 - File Created
--- Additional Comments:
--- 
--------------------------------------------------------------------------------------------------
-
-
 library IEEE, work;
 use IEEE.STD_LOGIC_1164.ALL;
 use work.tuneFilter_pkg.all;
@@ -45,6 +24,8 @@ entity control is
             en_1st_stage        : out STD_LOGIC;
             en_acc              : out STD_LOGIC;
             en_calc             : out STD_LOGIC;
+            en_2nd_stage        : out STD_LOGIC;
+            en_scale            : out STD_LOGIC;
             raddr_sample        : out unsigned(c_sample_addr_w-1 downto 0);
             waddr_sample        : out unsigned(c_sample_addr_w-1 downto 0);        
             raddr_coeff         : out unsigned(c_coeff_addr_w-1 downto 0);
@@ -64,20 +45,34 @@ type t_state is (idle, run);
 --signals----------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------
 --internal memory
-signal wreg0_s, wreg1_s : signed(c_data_w-1 downto 0);
-
+signal wreg0_s          : signed(c_data_w-1 downto 0);
+signal wreg1_s          : signed(c_data_w-1 downto 0);
 --FSM
-signal state, next_state : t_state := idle;
+signal state            : t_state := idle;
+signal next_state       : t_state := idle;
 --enable and control signals
-signal  RQ_s, CFG_s, GNT_c, RDY_c, en_cnt, en_section_end, flag_init_s,
-        flag_init_c, en_init, en_init_done, en_old_delay, en_new_delay, en_result : std_logic;
+signal RQ_s             : std_logic;
+signal CFG_s            : std_logic;
+signal GNT_c            : std_logic;
+signal RDY_c            : std_logic;
+signal en_cnt           : std_logic;
+signal en_section_end   : std_logic;
+signal flag_init_s      : std_logic;
+signal flag_init_c      : std_logic;
+signal en_init          : std_logic;
+signal en_init_done     : std_logic;
+signal en_old_delay     : std_logic;
+signal en_new_delay     : std_logic;
+signal en_result        : std_logic;
 --counters
-signal cnt_coeff_c, cnt_coeff_s :  unsigned(c_len_cnt_coeff-1 downto 0);
-signal cnt_sample :  unsigned(c_len_cnt_sample-1 downto 0);
-signal cnt_section_c, cnt_section_s : unsigned(c_len_cnt_section-1 downto 0);
+signal cnt_coeff_c      :  unsigned(c_len_cnt_coeff-1 downto 0);
+signal cnt_coeff_s      :  unsigned(c_len_cnt_coeff-1 downto 0);
+signal cnt_sample       :  unsigned(c_len_cnt_sample-1 downto 0);
+signal cnt_section_c    : unsigned(c_len_cnt_section-1 downto 0);
+signal cnt_section_s    : unsigned(c_len_cnt_section-1 downto 0);
 -------------------------------------------------------------------------------------------------
 begin
-p_reg: process (clk)
+    p_reg: process (clk)
 begin
     if rising_edge(clk) then
         --SYNCHRONOUS RESET
@@ -126,9 +121,9 @@ begin
             end if;
             if flag_init_s = '0' then
                 if en_old_delay = '1' then
-                    wreg1_s <= rdata_sample; --stores old delay
+                    wreg1_s <= rdata_sample; --store old delay
                 elsif en_result = '1' then
-                    wreg1_s <= wreg_c; --stores section result
+                    wreg1_s <= wreg_c; --store section result
                 end if;
             end if;
         end if;
@@ -171,7 +166,7 @@ P_rst_flag: flag_init_c <=  flag_init_s when en_init_done = '0' else
                             '0' when en_init_done = '1';                
 
 p_fsm: process (state, RQ_s, CFG_s, input, cnt_sample, cnt_coeff_s,cnt_section_s, wreg0_s,
-                wreg1_s, waddr_coeff)
+                wreg1_s, waddr_coeff, flag_init_s)
 begin
     --handshake
     GNT_c <= '0';
@@ -186,6 +181,7 @@ begin
     en_acc <= '0';
     en_1st_stage <= '0';
     en_old_delay <= '0';
+    en_2nd_stage <= '0';
     en_new_delay <= '0';
     en_result <= '0';
     en_init <= '0';
@@ -244,6 +240,9 @@ begin
             if cnt_coeff_s = 4 then
                 en_new_delay <= '1';
             end if;
+            if cnt_coeff_s = 5 then
+                en_2nd_stage <= '1';
+            end if;
             if cnt_coeff_s = 6 then
                 en_result <= '1';
             end if;
@@ -280,5 +279,7 @@ begin
 
     end case;
 end process;
+
+p_en_scale: en_scale <= en_old_delay; --cnt_coeff = 2, used to signal rounding of scale product
 
 end rtl;

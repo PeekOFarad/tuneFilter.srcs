@@ -28,6 +28,26 @@ result_fi = reinterpretcast(result_int16, numerictype(1, c_data_w, c_len_frac));
 
 reference = vector_fi(size1/2+1:end);
 
+
+figure(1);
+subplot(2,1,1);
 plot(reference);
-figure(2)
+hold on
 plot(result_fi);
+hold off
+legend('reference','můj filtr');
+xlabel('vzorek [-]');
+ylabel('amplituda [-]');
+title('matlab & můj filtr');
+
+% subplot(3,1,2);
+% plot(result_fi);
+% xlabel('vzorek [-]');
+% ylabel('amplituda [-]');
+% title('můj filtr');
+
+subplot(2,1,2);
+plot((result_fi-reference)/0.0001220703125);
+xlabel('vzorek [-]');
+ylabel('bity [-]');
+title('rozdíl');

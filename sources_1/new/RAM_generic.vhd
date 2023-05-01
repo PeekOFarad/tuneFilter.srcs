@@ -1,23 +1,3 @@
--------------------------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
--- 
--- Create Date: 02/10/2023 10:02:35 AM
--- Design Name: 
--- Module Name: control - Behavioral
--- Project Name: 
--- Target Devices: 
--- Tool Versions: 
--- Description: 
--- 
--- Dependencies: 
--- 
--- Revision:
--- Revision 0.01 - File Created
--- Additional Comments:
--- 
--------------------------------------------------------------------------------------------------
-
 library IEEE, work;
 use IEEE.STD_LOGIC_1164.ALL;
 use work.tuneFilter_pkg.all;
@@ -54,8 +34,8 @@ signal mem : t_mem;
 -------------------------------------------------------------------------------------------------
 --Attributes-------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------
-attribute ram_style : string;
-attribute ram_style of mem : signal is "block";
+-- attribute ram_style : string;
+-- attribute ram_style of mem : signal is "block";
 -------------------------------------------------------------------------------------------------
 begin
 

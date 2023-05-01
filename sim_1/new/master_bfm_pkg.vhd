@@ -4,7 +4,6 @@ use IEEE.Numeric_Std.all;
 use std.textio.all;
 use work.tuneFilter_pkg.all;
 use work.handshake_pkg.all;
---use work.filter_data_pkg.all;
 
 package master_bfm_pkg is
 
@@ -30,9 +29,6 @@ package master_bfm_pkg is
         op          : t_op;
         file_name   : string(1 to 50);
     end record;
-
-    
-
 
     function bfm_handle_init return t_bfm_handle;
     function bfm_handle_in_init return t_bfm_handle_in;
@@ -219,7 +215,7 @@ package body master_bfm_pkg is
     begin
         file_open(file_id,("../../../../tuneFilter.srcs/sim_1/new/" & test_file), read_mode);
         readline(file_id, line_id); --skip the first line by reading (it is integer)
-        while not endfile(file_id) loop
+        while not endfile(file_id) loop --load the test vector from file
             readline(file_id, line_id);
             read(line_id, data_bit);
             test_vector(addr) := to_stdLogicVector(data_bit);
@@ -232,18 +228,21 @@ package body master_bfm_pkg is
             if bfm_handle_in.RDY = '1' then
                 data := test_vector(addr);
                 send_one_sample(bfm_handle, bfm_handle_in, data);
-                wait until bfm_handle_in.RDY = '1';
+                
+                wait until falling_edge(bfm_handle_in.GNT);
+                wait until rising_edge(bfm_handle_in.RDY);
+                wait for 0ns;
                 
                 write(line_id1, to_bitvector(bfm_handle_in.master_in), left, c_data_w);
                 writeline(file_id1, line_id1);
 
                 if (Is_X(bfm_handle_in.master_in)
-                OR abs(signed(bfm_handle_in.master_in)  - signed(test_vector(addr+vector_length-1))) > 31) then
+                OR abs(signed(bfm_handle_in.master_in)  - signed(test_vector(addr+1+vector_length-1))) > 15) then
                     test_fail := true;
                     cnt_err := cnt_err + 1;
                     assert false 
                         report "Error in output: Expected " 
-                        & to_hex(test_vector(addr+vector_length-1))
+                        & to_hex(test_vector(addr+1+vector_length-1))
                         & " Actual "
                         & to_hex(bfm_handle_in.master_in)
                         severity error;
@@ -275,15 +274,12 @@ package body master_bfm_pkg is
     function bfm_handle_init return t_bfm_handle is   
         variable ret : t_bfm_handle;--t_pkg_handleArray(0 to size - 1);
      begin
-        --for i in ret'range loop
-           -- initialize control signals to 'Z' (overriden from BFM or test controller)
-           -- the index is set only during initialization and remaind constant
-           ret := (   
-                RQ => 'Z',
-                CFG => 'Z', 
-                waddr_coeff => (others => 'Z'),
-                master_out => (others => 'Z')
-                      );
+        ret := (   
+            RQ => 'Z',
+            CFG => 'Z', 
+            waddr_coeff => (others => 'Z'),
+            master_out => (others => 'Z')
+        );
         --end loop;
         return ret;
     end function;
@@ -291,14 +287,11 @@ package body master_bfm_pkg is
     function bfm_handle_in_init return t_bfm_handle_in is   
         variable ret : t_bfm_handle_in;--t_pkg_handleArray(0 to size - 1);
      begin
-        --for i in ret'range loop
-           -- initialize control signals to 'Z' (overriden from BFM or test controller)
-           -- the index is set only during initialization and remaind constant
-           ret := (   
-                GNT => 'Z',
-                RDY => 'Z',
-                master_in => (others => 'Z')
-                      );
+        ret := (   
+            GNT => 'Z',
+            RDY => 'Z',
+            master_in => (others => 'Z')
+        );
         --end loop;
         return ret;
     end function;

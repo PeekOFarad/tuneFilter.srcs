@@ -1,9 +1,8 @@
-
 library ieee;
-   use ieee.std_logic_1164.all;
-   use ieee.numeric_std.all;
-   use IEEE.std_logic_textio.all;
-   use std.textio.all;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+use IEEE.std_logic_textio.all;
+use std.textio.all;
 
 package handshake_pkg is
 
@@ -12,11 +11,7 @@ package handshake_pkg is
       req      : std_logic;   -- driven by the test controller through the BFM's package
       ack      : std_logic;   -- driven by the BFM
       ready    : std_logic;   -- driven by the BFM
-      --idx      : std_logic_vector(15 downto 0);  -- remains constant; used to store the BFM index in the handle array
    end record;
-  
-   -- BFM Handle Array Type
-   --type t_pkg_handleArray is array (natural range <>) of t_pkg_handle;
 
     -- send a request to the BFM (usable outside of the BFM)
    procedure bfm_send_request (
@@ -39,7 +34,6 @@ package handshake_pkg is
    );
 
    -- Initialization routine for the BFM handles
-   -- function t_pkg_handleArray_init(size: natural) return t_pkg_handleArray;
    function t_pkg_handle_init return t_pkg_handle;
 
    function to_hstring (SLV : std_logic_vector) return string;
@@ -126,18 +120,14 @@ package body handshake_pkg is
    end procedure;
 
    -- Initialization routine for the BFM handles
-   --function t_pkg_handleArray_init(size: natural) return t_pkg_handleArray is
    function t_pkg_handle_init return t_pkg_handle is   
-      variable ret : t_pkg_handle;--t_pkg_handleArray(0 to size - 1);
+      variable ret : t_pkg_handle;
    begin
-      --for i in ret'range loop
-         -- initialize control signals to 'Z' (overriden from BFM or test controller)
-         -- the index is set only during initialization and remaind constant
-         ret := (   req   => 'W',
-                    ack   => 'Z',
-                    ready => 'Z'
-                    --idx   => std_logic_vector(to_unsigned(i, 16))
-                    );
+      ret := (
+         req   => 'W',
+         ack   => 'Z',
+         ready => 'Z'
+      );
       --end loop;
       return ret;
    end function;

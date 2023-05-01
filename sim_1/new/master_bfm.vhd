@@ -2,7 +2,6 @@ library IEEE, work;
 use IEEE.Std_logic_1164.all;
 use IEEE.Numeric_Std.all;
 use work.tuneFilter_pkg.all;
---use work.filter_data_pkg.all;
 use work.master_bfm_pkg.all;
 use work.handshake_pkg.all;
 use std.textio.all;
@@ -24,10 +23,6 @@ entity master_bfm is
 end entity; 
 
 architecture behavioral of master_bfm is
-
-signal send_data_req    : boolean := false;
-signal send_data_ack    : boolean := false;
-signal sample_data      : std_logic_vector(c_data_w-1 downto 0);
 
 begin
     --in
