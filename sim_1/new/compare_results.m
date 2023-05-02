@@ -1,4 +1,4 @@
-fname_vector = 'test_vectors2.txt';
+fname_vector = 'test_vectors_w07_o20.txt';
 fname_result = (strcat('result_of_',fname_vector));
 fID_vector = fopen(fname_vector, 'r');
 fID_result = fopen(fname_result, 'r');

@@ -6,7 +6,7 @@ use IEEE.math_real.all;
 
 package tuneFilter_pkg is
 --constants
-constant c_f_order : integer := 8; --filter order
+constant c_f_order : integer := 20; --filter order
 constant c_s_order : integer := 2; --section order
 constant c_data_w : integer := 16; --data width
 constant c_acc_w : integer := c_data_w*2+2; --accummulator width, default = 34
@@ -20,6 +20,12 @@ constant c_wreg_high : integer := c_acc_w-(c_len_mul_int); -- 34-(32-26)=28,
 constant c_wreg_low : integer := c_wreg_high-(c_data_w-1); -- =13
 constant c_neg_one : signed(c_len_mul_int-1 downto 0) 
                     :=  to_signed(-1,c_len_mul_int);
+constant c_acc_sat_pos : signed(c_acc_w-1 downto 0) :=  (c_acc_w-1 downto c_wreg_high => '0' )
+                                                        &(c_wreg_high-1 downto c_wreg_low => '1')
+                                                        &(c_wreg_low-1 downto 0 => '0');
+constant c_acc_sat_neg : signed(c_acc_w-1 downto 0) :=  (c_acc_w-1 downto c_wreg_high => '1')
+                                                        & (c_wreg_high-1 downto 0 => '0');
+
 constant c_len_cnt_coeff : integer := integer(ceil(log2(real(2*c_s_order+1)))); 
 -- =3; find nearest power of 2 larger than the number of coefficients
 constant c_len_cnt_sample : integer := integer(ceil(log2(real(c_S_Order+1))));
@@ -35,11 +41,6 @@ constant c_len_coeff_mem : integer := c_f_order/c_s_order * 2**c_len_cnt_coeff;
 constant c_len_cnt_init : integer := integer(ceil(log2(real(c_len_coeff_mem))));
 
 constant clk_period: time := 10 ns;
-
---types
-type t_sample_mem is array (0 to c_len_sample_mem-1) of signed(c_data_w-1 downto 0); --sram
-type t_coeff_mem is array (0 to c_len_coeff_mem-1) of signed(c_data_w-1 downto 0);
-    --coefficient memory
 
 --functions
 FUNCTION to_hex( x : IN std_logic) RETURN string;

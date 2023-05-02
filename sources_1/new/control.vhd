@@ -228,21 +228,27 @@ begin
         when run =>
             en_cnt <= '1';
             en_calc <= '1';
-            if cnt_coeff_s >= 1 AND cnt_coeff_s <= 6 then --5 accumulate operations
+            --5 accumulate operations
+            if cnt_coeff_s >= 1 AND cnt_coeff_s <= 6 then
                 en_acc <= '1';
             end if;
-            if cnt_coeff_s >= 3 AND cnt_coeff_s <= 4 then
-                en_1st_stage <= '1';
-            end if;
+            -- save delay(0) to wreg (and signal to round scale product)
             if cnt_coeff_s = 2 then
                 en_old_delay <= '1';
             end if;
+            --subtract in 1st stage
+            if cnt_coeff_s >= 3 AND cnt_coeff_s <= 4 then
+                en_1st_stage <= '1';
+            end if;
+            -- save 1st stage result as the new delayed sample
             if cnt_coeff_s = 4 then
                 en_new_delay <= '1';
             end if;
+            --signal to round 1st stage result
             if cnt_coeff_s = 5 then
                 en_2nd_stage <= '1';
             end if;
+            --save section result into wreg
             if cnt_coeff_s = 6 then
                 en_result <= '1';
             end if;

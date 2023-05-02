@@ -191,7 +191,8 @@ package body master_bfm_pkg is
     begin
             bfm_handle.master_out <= data;
             bfm_handle.RQ <= '1';
-            wait until bfm_handle_in.GNT = '1'; --wait for confirmation
+            wait until rising_edge(bfm_handle_in.GNT); --wait for confirmation
+            wait for clk_period;
             bfm_handle.RQ <= '0';
     end procedure;
 
@@ -237,7 +238,7 @@ package body master_bfm_pkg is
                 writeline(file_id1, line_id1);
 
                 if (Is_X(bfm_handle_in.master_in)
-                OR abs(signed(bfm_handle_in.master_in)  - signed(test_vector(addr+1+vector_length-1))) > 15) then
+                OR abs(signed(bfm_handle_in.master_in)  - signed(test_vector(addr+1+vector_length-1))) > 0) then
                     test_fail := true;
                     cnt_err := cnt_err + 1;
                     assert false 

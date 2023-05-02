@@ -22,9 +22,9 @@ begin
     wait until bfm_handle_in.RDY = '1';
     report "Filter ready, commence test!";
     
-    set_op_init(pkg_handle, "cfg2.txt");  
+    set_op_init(pkg_handle, "cfg_w07_o20.txt");  
 
-    set_op_test(pkg_handle, "test_vectors2.txt");
+    set_op_test(pkg_handle, "test_vectors_w07_o20.txt");
 
     wait;
 end process;
