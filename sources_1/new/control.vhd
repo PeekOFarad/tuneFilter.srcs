@@ -117,7 +117,7 @@ begin
             cnt_section_s <= cnt_section_c;
             --internal memory registers
             if en_new_delay = '1' AND flag_init_s = '0' then
-                wreg0_s <= wreg_c; --stores 1st section result
+                wreg0_s <= wreg_c; --stores 1st stage result
             end if;
             if flag_init_s = '0' then
                 if en_old_delay = '1' then
@@ -179,6 +179,7 @@ begin
     en_calc <= '0';
     en_section_end <= '0';
     en_acc <= '0';
+    en_scale <= '0';
     en_1st_stage <= '0';
     en_old_delay <= '0';
     en_2nd_stage <= '0';
@@ -234,6 +235,7 @@ begin
             end if;
             -- save delay(0) to wreg (and signal to round scale product)
             if cnt_coeff_s = 2 then
+                en_scale <= '1';
                 en_old_delay <= '1';
             end if;
             --subtract in 1st stage
@@ -264,7 +266,7 @@ begin
             if cnt_coeff_s = 5 then
                 waddr_sample <= cnt_section_s & "01"; --delay(0) <= new_delay
                 wdata_sample <= wreg0_s;
-            elsif cnt_coeff_s = 6 then
+            elsif cnt_coeff_s = 6 then 
                 waddr_sample <= cnt_section_s & "10"; --delay(1) <= delay(0)
                 wdata_sample <= wreg1_s;
             elsif cnt_coeff_s = 7 then
@@ -285,7 +287,5 @@ begin
 
     end case;
 end process;
-
-p_en_scale: en_scale <= en_old_delay; --cnt_coeff = 2, used to signal rounding of scale product
 
 end rtl;

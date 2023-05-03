@@ -7,6 +7,8 @@ use work.handshake_pkg.all;
 
 package master_bfm_pkg is
 
+    constant file_path : string := "../../../../tuneFilter.srcs/sim_1/new/"; -- functional sim path "../../../../../tuneFilter.srcs/sim_1/new/";
+
     type t_bfm_handle is record
         RQ                  : STD_LOGIC;
         CFG                 : STD_LOGIC;
@@ -129,9 +131,7 @@ package body master_bfm_pkg is
         signal bfm_handle   : out t_bfm_handle;
         constant init_file  : in string
     ) is
-        file file_id        : text open read_mode is (
-                                        "../../../../tuneFilter.srcs/sim_1/new/" & init_file
-                                        );
+        file file_id        : text open read_mode is (file_path & init_file);
     --relative path to simulation sources folder, where matlab scrip convertCoeff.m is located
         variable line_id    : line;
         variable addr       : integer := 0;
@@ -202,7 +202,8 @@ package body master_bfm_pkg is
         constant test_file      : string
     ) is
         file file_id                : text;
-        file file_id1               : text open write_mode is ("../../../../tuneFilter.srcs/sim_1/new/result_of_" & test_file);
+        file file_id1               : text open write_mode is (file_path
+                                                                &"result_of_" & test_file);
         variable line_id            : line;
         variable line_id1           : line;
         variable data_bit           : bit_vector(c_data_w-1 downto 0);
@@ -214,7 +215,7 @@ package body master_bfm_pkg is
         constant vector_length      : integer := get_vector_size(test_file);
         
     begin
-        file_open(file_id,("../../../../tuneFilter.srcs/sim_1/new/" & test_file), read_mode);
+        file_open(file_id,(file_path & test_file), read_mode);
         readline(file_id, line_id); --skip the first line by reading (it is integer)
         while not endfile(file_id) loop --load the test vector from file
             readline(file_id, line_id);
@@ -311,7 +312,7 @@ package body master_bfm_pkg is
         arg : string
     ) return integer is
         file file_id        : text open read_mode is (
-            "../../../../tuneFilter.srcs/sim_1/new/" & arg
+            file_path & arg
             );
         variable line_id    : line;
         variable data       : integer;
