@@ -59,7 +59,6 @@ signal en_cnt           : std_logic;
 signal en_section_end   : std_logic;
 signal flag_init_s      : std_logic;
 signal flag_init_c      : std_logic;
-signal en_init          : std_logic;
 signal en_init_done     : std_logic;
 signal en_old_delay     : std_logic;
 signal en_new_delay     : std_logic;
@@ -185,7 +184,6 @@ begin
     en_2nd_stage <= '0';
     en_new_delay <= '0';
     en_result <= '0';
-    en_init <= '0';
     en_init_done <= '0';
     --signals
     wdata_sample <= (others => '0');
@@ -198,27 +196,31 @@ begin
     case (state) is
 
         when idle => --wait for new data or initialization
-            next_state <= idle;
+            next_state <= idle; -- stay in idle until there's valid data on input
             if CFG_s = '1' AND flag_init_s = '0' then
                 we_coeff_mem <= '1';
                 waddr_coeff_int <= waddr_coeff;
                 wdata_coeff <= input;
             end if;
+            -- initialize memory
             if flag_init_s = '1' then
-                en_init <= '1';
                 en_cnt <= '1';
                 we_sample_mem <= '1';
+                we_coeff_mem <= '1';
                 wdata_sample <= (others => '0');
-                waddr_sample <= cnt_section_s & cnt_coeff_s(1 downto 0);
-                if cnt_coeff_s >= 2**c_len_cnt_sample-1 then
+                waddr_sample <= cnt_section_s & cnt_coeff_s(cnt_sample'high downto 0);
+                wdata_coeff <= (others => '0');
+                waddr_coeff_int <= cnt_section_s & cnt_coeff_s;
+                if cnt_coeff_s >= 2**c_len_cnt_coeff-1 then
                     en_section_end <= '1';
                 end if;
-                if (cnt_coeff_s >= 2**c_len_cnt_sample-1)
+                if (cnt_coeff_s >= 2**c_len_cnt_coeff-1)
                 AND (cnt_section_s >= (c_f_order/c_s_order-1)) then 
                     RDY_c <= '1';
                     en_init_done <= '1';
                 end if; 
-            elsif RQ_s = '1' AND flag_init_s = '0' then --data valid
+            -- valid data on input
+            elsif RQ_s = '1' AND flag_init_s = '0' then
                 GNT_c <= '1';
                 we_sample_mem <= '1';
                 waddr_sample <= (others => '0');
@@ -245,9 +247,6 @@ begin
             -- save 1st stage result as the new delayed sample
             if cnt_coeff_s = 4 then
                 en_new_delay <= '1';
-            end if;
-            --signal to round 1st stage result
-            if cnt_coeff_s = 5 then
                 en_2nd_stage <= '1';
             end if;
             --save section result into wreg

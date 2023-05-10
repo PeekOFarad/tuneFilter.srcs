@@ -19,7 +19,7 @@ i0_test_bench: entity work.top_tb(bench)
 
 p_test_case: process
 begin
-    wait until bfm_handle_in.RDY = '1';
+    wait until rising_edge(bfm_handle_in.RDY);
     report "Filter ready, commence test!";
     
     set_op_init(pkg_handle, "cfg_w07_o20.txt");  

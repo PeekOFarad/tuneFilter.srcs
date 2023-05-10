@@ -32,9 +32,11 @@ constant c_len_cnt_sample : integer := integer(ceil(log2(real(c_S_Order+1))));
 -- =2; find nearest power of 2 larger than the number of delay elements in a section
 constant c_len_cnt_section : integer := integer(ceil(log2(real(c_f_order/c_s_order))));
 --=2; finde the nearest power of 2 larger than the number of sections
+
 constant c_coeff_addr_w : integer := c_len_cnt_section+c_len_cnt_coeff;
 constant c_sample_addr_w : integer := c_len_cnt_section+c_len_cnt_sample;
 constant c_len_sample_mem : integer := c_F_Order/c_s_order * 2**c_len_cnt_sample;
+
 --sample memory size
 constant c_len_coeff_mem : integer := c_f_order/c_s_order * 2**c_len_cnt_coeff;
 -- =32; coefficient memory size = number of sections * coeff. memory alocated for one section

@@ -30,9 +30,14 @@ signal prod_pipe_c          : signed(c_prod_w-1 downto 0);
 signal prod_pipe_s          : signed(c_prod_w-1 downto 0);
 signal prod_pipe_s_floored  : signed(c_prod_w-1 downto 0);
 signal acc_c                : signed(c_acc_w-1 downto 0);
-signal acc_s                : signed(c_acc_w-1 downto 0);
-signal acc_s_floored        : signed(c_acc_w-1 downto 0);
+signal acc_c_floored        : signed(c_acc_w-1 downto 0);
+signal acc_mux_out           : signed(c_acc_w-1 downto 0);
+signal acc_s                : signed(c_acc_w downto 0);
 signal acc                  : signed(c_acc_w downto 0);
+--temp
+
+
+----------------------
 -------------------------------------------------------------------------------------------------
 begin
 p_reg: process (clk)
@@ -43,59 +48,30 @@ begin
             acc_s <= (others => '0');
         else
             --arithmetic regiters
+            acc_s <= resize(acc_mux_out, c_acc_w+1);
             prod_pipe_s <= prod_pipe_c;
-            if en_acc = '1' then --accuprodator enable
-                acc_s <= acc_c;
-                prod_pipe_s <= prod_pipe_c;
-            else
-                acc_s <= (others => '0');
-                prod_pipe_s <= (others => '0');
-            end if;
         end if;
     end if;
 end process;
 
-p_prod: prod_pipe_c <= rdata_sample * rdata_coeff when en_calc = '1' else
-        (others => '0');
+p_prod: prod_pipe_c <= rdata_sample * rdata_coeff;
 
--- saturate to -+ 4 and floor lower 13 bits (c_wreg_low downto 0)
-p_floor: acc_s_floored <=   
-        c_acc_sat_pos when --positive saturation (to c_data_w)
-            ((acc_s(c_acc_w-1) = '0')
-            AND (acc_s(c_acc_w-2 downto c_wreg_high) /= 0))
-    else
-        c_acc_sat_neg when --negative saturation (to c_data_w)
-            ((acc_s(c_acc_w-1) = '1')
-            AND (acc_s(c_acc_w-2 downto c_wreg_high) /= c_neg_one(c_len_mul_int-1 downto 0)))
-    else
-        resize(acc_s(c_wreg_high downto c_wreg_low)
-        &(c_wreg_low-1 downto 0 => '0'),c_acc_w);
+prod_pipe_s_floored <=  resize(prod_pipe_s(c_wreg_high downto c_wreg_low)
+                            &(c_wreg_low-1 downto 0 => '0'), c_prod_w) when en_calc = '1'
+                        else
+                            (others => '0');
 
-prod_pipe_s_floored <= resize(prod_pipe_s(c_wreg_high downto c_wreg_low)
-                             &(c_wreg_low-1 downto 0 => '0'),c_prod_w);
-
-p_acc: process(acc_s, prod_pipe_s, acc_s_floored, prod_pipe_s_floored, en_scale, en_1st_stage,
+p_acc: process(acc_s, prod_pipe_s, prod_pipe_s_floored, en_scale, en_1st_stage,
                 en_2nd_stage)
---no rounding------------------------------------------------------------------------------------
--- begin
---     if en_1st_stage = '1' then -- subtract wreg1_ss of a2 and a3 products
---         acc <= resize(acc_s, c_acc_w + 1) - resize(prod_pipe_s, c_acc_w + 1);
---     else      
---         acc <= resize(acc_s, c_acc_w + 1) + resize(prod_pipe_s, c_acc_w + 1);
---     end if;
--- end process;
--------------------------------------------------------------------------------------------------
---floor round product of scale and 1st stage result----------------------------------------------
+--floor product of scale and 1st stage result----------------------------------------------
 begin
     -- normal addition in 2nd stage
-    acc <= resize(acc_s, c_acc_w + 1) + resize(prod_pipe_s, c_acc_w + 1);
+    acc <= acc_s + resize(prod_pipe_s, c_acc_w + 1);
     --rounding and subtraction
     if en_scale = '1' then -- round prod to 13 frac bits after scale
-        acc <= resize(acc_s, c_acc_w + 1) + resize(prod_pipe_s_floored, c_acc_w+1);
+        acc <= acc_s + resize(prod_pipe_s_floored, c_acc_w+1);
     elsif en_1st_stage = '1' then -- subtract in 1st stage
-        acc <= resize(acc_s, c_acc_w + 1) - resize(prod_pipe_s, c_acc_w + 1);
-    elsif en_2nd_stage = '1' then --round acc to 13 frac bits after 1st stage
-        acc <= resize(acc_s_floored, c_acc_w + 1) + resize(prod_pipe_s, c_acc_w + 1);
+        acc <= acc_s - resize(prod_pipe_s, c_acc_w + 1);
     end if;
 -------------------------------------------------------------------------------------------------
 end process;
@@ -107,10 +83,34 @@ p_acc_overflow: acc_c <=    ('0'&(c_acc_w-2 downto 0 => '1')) --positive saturat
                             when ((acc(c_acc_w) = '1') AND (acc(c_acc_w-1) /= '1')) else
                             acc(c_acc_w-1 downto 0);
 
-p_wreg: wreg_c <=   ('0'&(c_data_w-2 downto 0 => '1')) --positive saturation
-            when ((acc(c_acc_w) = '0') AND (acc(c_acc_w-1 downto c_wreg_high) /= 0)) else
-            ('1'&(c_data_w-2 downto 0 => '0')) --negative saturation
-            when ((acc(c_acc_w) = '1') AND (acc(c_acc_w-1 downto c_wreg_high) /= c_neg_one)) else
+p_acc_floored:  acc_c_floored <= --positive saturation (to c_data_w)
+                    c_acc_sat_pos when 
+                        ((acc(c_acc_w) = '0')
+                        AND (acc(c_acc_w-1 downto c_wreg_high) /= 0))
+                else    --negative saturation (to c_data_w)
+                    c_acc_sat_neg when 
+                        ((acc(c_acc_w) = '1')
+                        AND (acc(c_acc_w-1 downto c_wreg_high) /= c_neg_one(c_len_mul_int-1 downto 0)))
+                else    -- floor to 16 digits       
+                    resize(acc(c_wreg_high downto c_wreg_low)
+                    &(c_wreg_low-1 downto 0 => '0'),c_acc_w);
+
+                            -- floor 1st stage result
+p_acc_mux: acc_mux_out <=   acc_c_floored when en_2nd_stage = '1' AND en_acc = '1' else
+                            -- else normal sum
+                            acc_c when en_acc = '1' else
+                            -- else zeros
+                            (others => '0');
+
+p_wreg: wreg_c <=   
+            ('0'&(c_data_w-2 downto 0 => '1')) when -- positive saturation
+                ((acc(c_acc_w) = '0')
+                AND (acc(c_acc_w-1 downto c_wreg_high) /= 0))
+        else
+            ('1'&(c_data_w-2 downto 0 => '0')) when -- negative saturation
+                ((acc(c_acc_w) = '1')
+                AND (acc(c_acc_w-1 downto c_wreg_high) /= c_neg_one))
+        else
             acc(c_wreg_high downto c_wreg_low);
 
 
