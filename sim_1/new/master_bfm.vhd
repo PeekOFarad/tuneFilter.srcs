@@ -8,9 +8,7 @@ use std.textio.all;
 
 entity master_bfm is
     port (
-        clk                 : in std_logic;
-        rst                 : in std_logic;
-
+        rst                 : out std_logic;
         --link signals
         GNT                 : in STD_LOGIC;
         RDY                 : in STD_LOGIC;
@@ -42,12 +40,12 @@ begin
 p_cmd: process
     variable cmd : t_bfm_cmd;
 begin
-
+    
     pkg_handle.ack <= '0';
     report "BFM initialized";
     wait for 0 ns; --wait for delta cycle -> TODO: find out what the biscuit is a delta cycle
                                         -- ANSWER:everything above happens "in parallel"?
-
+    rst   <= '1', '0' after 5 *clk_period;
     loop
         --THIS RUNS IN PARALLEL
         bfm_wait_for_request(pkg_handle);
@@ -59,9 +57,12 @@ begin
         case cmd.op is
             when test =>
                 report("---> Running test...");
-                run_test(bfm_handle, bfm_handle_in, cmd.file_name);
+                send_stimuli(bfm_handle, bfm_handle_in, cmd.file_name);
 
             when init =>
+                rst   <= '1', '0' after 5 *clk_period;
+                wait for 5*clk_period;
+                wait until rising_edge(bfm_handle_in.RDY);
                 report("---> Writing coefficients...");
                 memory_init(bfm_handle, cmd.file_name);
                 

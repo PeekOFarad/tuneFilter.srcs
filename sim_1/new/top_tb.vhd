@@ -2,11 +2,9 @@ library IEEE, work;
 use IEEE.Std_logic_1164.all;
 use IEEE.Numeric_Std.all;
 use work.tuneFilter_pkg.all;
+use work.master_bfm_pkg.all;
 
 entity top_tb is
-  generic (
-    g_STC : boolean := false
-  );
 end;
 
 architecture bench of top_tb is
@@ -36,14 +34,21 @@ begin
 -------------------------------------------------------------------------------------------------
 clocking: process
 begin
-  while not g_STC loop
+  loop
     clk <= '0', '1' after clk_period / 2;
     wait for clk_period;
   end loop;
   wait;
 end process;
 
-rst   <= '1', '0' after 5 *clk_period;
+-- reset: process
+-- begin
+--   loop
+--     rst   <= '1', '0' after 5 *clk_period;
+--   wait for 
+  
+-- end process;
+
 
 uut: top 
   port map ( 
@@ -59,9 +64,8 @@ uut: top
   );
 
 bfm: entity work.master_bfm(behavioral)
-  port map (
-    clk         => clk,     
-    rst         => rst,   
+  port map ( 
+    rst         => rst,
     --link signals
     GNT         => GNT,   
     RDY         => RDY,   

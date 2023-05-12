@@ -33,6 +33,10 @@ package handshake_pkg is
       constant log_name    : in    string  := "bfm_ack_request"
    );
 
+   -- procedure wait_for_bfm(
+   --    signal handle  : inout t_pkg_handle
+   -- );
+
    -- Initialization routine for the BFM handles
    function t_pkg_handle_init return t_pkg_handle;
 
@@ -43,6 +47,13 @@ end package;
 
 package body handshake_pkg is
 
+   -- procedure wait_for_bfm (
+   --    signal handle  : inout t_pkg_handle
+   -- ) is
+   -- begin
+   --    wait 
+   -- end procedure;
+   
    -- send a request to the BFM (usable outside of the BFM)
    procedure bfm_send_request (
      signal   handle      : inout t_pkg_handle;

@@ -64,8 +64,12 @@ package master_bfm_pkg is
         signal handle       : inout t_pkg_handle;
         constant test_file  : string
     );
-        
-        
+
+    procedure run_test(
+        signal handle   : inout t_pkg_handle;
+        constant params : string
+    );
+          
 -------------------------------------------------------------------------------------------------
 --BFM INTERNAL PROCEDURES------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------
@@ -92,7 +96,7 @@ package master_bfm_pkg is
         constant data       : std_logic_vector(c_data_w-1 downto 0)
     );
 
-    procedure run_test (
+    procedure send_stimuli (
         signal bfm_handle       : out t_bfm_handle;
         signal bfm_handle_in    : in t_bfm_handle_in;
         constant test_file      : string
@@ -123,10 +127,25 @@ package body master_bfm_pkg is
         bfm_cmd.file_name := pad_string(test_file);
         bfm_send_request(handle);
     end procedure;
+
+    procedure run_test (
+        signal handle   : inout t_pkg_handle;
+        constant params : string
+    ) is
+    begin
+        set_op_init(
+            handle,
+            ("cfg_"&params&".txt")
+        );
+        wait for 0 ns;
+        set_op_test(
+            handle,
+            ("test_vectors_"&params&".txt")
+        );
+    end procedure;
 -------------------------------------------------------------------------------------------------
 --BFM INTERNAL PROCEDURES------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------
-
     procedure memory_init (
         signal bfm_handle   : out t_bfm_handle;
         constant init_file  : in string
@@ -159,7 +178,7 @@ package body master_bfm_pkg is
         constant addr       : std_logic_vector(c_coeff_addr_w-1 downto 0)
     ) is
     begin
-        report("---> writing coefficient " & integer'image(to_integer(unsigned(addr))) & " = " & integer'image(to_integer(signed(data))) &"!");
+        --report("---> writing coefficient " & integer'image(to_integer(unsigned(addr))) & " = " & integer'image(to_integer(signed(data))) &"!");
         bfm_handle.waddr_coeff <= addr;
         bfm_handle.master_out <= data;
         bfm_handle.CFG <= '1'; --write enable
@@ -196,7 +215,7 @@ package body master_bfm_pkg is
             bfm_handle.RQ <= '0';
     end procedure;
 
-    procedure run_test (
+    procedure send_stimuli (
         signal bfm_handle       : out t_bfm_handle;
         signal bfm_handle_in    : in t_bfm_handle_in;
         constant test_file      : string
@@ -259,9 +278,9 @@ package body master_bfm_pkg is
             file_close(file_id);
             file_close(file_id1);
         if test_fail then
-            report "**********TEST FAILED WITH " & integer'image(cnt_err) & " ERRORS!**********" severity error;
+            report "**********TEST OF "&test_file&" FAILED WITH " & integer'image(cnt_err) & " ERRORS!**********" severity error;
         else
-            report "***************TEST SUCCESFUL!****************";
+            report "***************TEST OF "&test_file&" SUCCESFUL!****************";
         end if;   
     end procedure;
 
@@ -322,5 +341,7 @@ package body master_bfm_pkg is
         file_close(file_id);
         return data;
     end function;
+
+    
 
 end package body;
