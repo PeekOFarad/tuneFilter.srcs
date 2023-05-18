@@ -13,7 +13,6 @@ entity au is
             rst                 : in STD_LOGIC;
             en_acc              : in STD_LOGIC;
             en_1st_stage        : in STD_LOGIC;
-            en_calc             : in STD_LOGIC;
             en_scale            : in STD_LOGIC;
             en_2nd_stage        : in STD_LOGIC;
             rdata_sample        : in signed(c_data_w-1 downto 0);
@@ -34,10 +33,6 @@ signal acc_c_floored        : signed(c_acc_w-1 downto 0);
 signal acc_mux_out           : signed(c_acc_w-1 downto 0);
 signal acc_s                : signed(c_acc_w downto 0);
 signal acc                  : signed(c_acc_w downto 0);
---temp
-
-
-----------------------
 -------------------------------------------------------------------------------------------------
 begin
 p_reg: process (clk)
@@ -57,9 +52,7 @@ end process;
 p_prod: prod_pipe_c <= rdata_sample * rdata_coeff;
 
 prod_pipe_s_floored <=  resize(prod_pipe_s(c_wreg_high downto c_wreg_low)
-                            &(c_wreg_low-1 downto 0 => '0'), c_prod_w) when en_calc = '1'
-                        else
-                            (others => '0');
+                            &(c_wreg_low-1 downto 0 => '0'), c_prod_w);
 
 p_acc: process(acc_s, prod_pipe_s, prod_pipe_s_floored, en_scale, en_1st_stage,
                 en_2nd_stage)
@@ -71,7 +64,7 @@ begin
     if en_scale = '1' then -- round prod to 13 frac bits after scale
         acc <= acc_s + resize(prod_pipe_s_floored, c_acc_w+1);
     elsif en_1st_stage = '1' then -- subtract in 1st stage
-        acc <= acc_s - resize(prod_pipe_s, c_acc_w + 1);
+        acc <= acc_s  + (-resize(prod_pipe_s, c_acc_w + 1));
     end if;
 -------------------------------------------------------------------------------------------------
 end process;
@@ -112,6 +105,4 @@ p_wreg: wreg_c <=
                 AND (acc(c_acc_w-1 downto c_wreg_high) /= c_neg_one))
         else
             acc(c_wreg_high downto c_wreg_low);
-
-
 end rtl;

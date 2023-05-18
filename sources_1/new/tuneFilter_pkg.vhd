@@ -6,7 +6,7 @@ use IEEE.math_real.all;
 
 package tuneFilter_pkg is
 --constants
-constant c_f_order : integer := 8; --filter order
+constant c_f_order : integer := 20; --filter order
 constant c_s_order : integer := 2; --section order
 constant c_data_w : integer := 16; --data width
 constant c_acc_w : integer := c_data_w*2+2; --accummulator width, default = 34

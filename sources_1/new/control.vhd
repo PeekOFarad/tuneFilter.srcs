@@ -23,7 +23,6 @@ entity control is
             we_coeff_mem        : out STD_LOGIC;
             en_1st_stage        : out STD_LOGIC;
             en_acc              : out STD_LOGIC;
-            en_calc             : out STD_LOGIC;
             en_2nd_stage        : out STD_LOGIC;
             en_scale            : out STD_LOGIC;
             raddr_sample        : out unsigned(c_sample_addr_w-1 downto 0);
@@ -175,7 +174,6 @@ begin
     we_coeff_mem <= '0';
     --enable signals
     en_cnt <= '0';
-    en_calc <= '0';
     en_section_end <= '0';
     en_acc <= '0';
     en_scale <= '0';
@@ -230,9 +228,8 @@ begin
         
         when run =>
             en_cnt <= '1';
-            en_calc <= '1';
             --5 accumulate operations
-            if cnt_coeff_s >= 1 AND cnt_coeff_s <= 6 then
+            if cnt_coeff_s >= 2 AND cnt_coeff_s <= 6 then
                 en_acc <= '1';
             end if;
             -- save delay(0) to wreg (and signal to round scale product)

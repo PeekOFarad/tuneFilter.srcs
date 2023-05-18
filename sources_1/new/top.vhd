@@ -5,11 +5,11 @@ use work.tuneFilter_pkg.all;
 
 -- Uncomment the following library declaration if instantiating
 -- any Xilinx leaf cells in this code.
-library UNISIM;
-use UNISIM.VComponents.all;
+-- library UNISIM;
+-- use UNISIM.VComponents.all;
 
-Library UNIMACRO;
-use UNIMACRO.vcomponents.all;
+-- Library UNIMACRO;
+-- use UNIMACRO.vcomponents.all;
 
 entity top is
   Port (    clk                 : in STD_LOGIC;
@@ -42,7 +42,6 @@ signal we_sample_mem  : std_logic;
 signal we_coeff_mem   : std_logic;
 signal en_1st_stage   : std_logic;
 signal en_acc         : std_logic;
-signal en_calc        : std_logic;
 signal en_2nd_stage   : std_logic;
 signal en_scale       : std_logic;
 
@@ -66,7 +65,6 @@ i0_control: entity work.control(rtl)
     we_coeff_mem => we_coeff_mem,
     en_1st_stage => en_1st_stage,
     en_acc => en_acc,
-    en_calc => en_calc,
     en_2nd_stage => en_2nd_stage,
     en_scale => en_scale,
     raddr_sample => raddr_sample,
@@ -83,7 +81,6 @@ i0_AU: entity work.au(rtl)
     clk => clk,
     rst => rst,
     en_acc => en_acc,
-    en_calc => en_calc,
     en_2nd_stage => en_2nd_stage,
     en_scale => en_scale,
     en_1st_stage => en_1st_stage,

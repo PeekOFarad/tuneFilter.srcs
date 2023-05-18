@@ -1,5 +1,5 @@
-fname_vector = 'test_vectors_BP_w03_07_o8.txt';
-fname_pkg = 'filter_tb_BP_w03_07_o8_data.vhd';
+fname_vector = 'test_vectors_BS_w03_07_o8.txt';
+fname_pkg = 'filter_tb_BS_w03_07_o8_data.vhd';
 fID_vector = fopen(fname_vector, 'wt');
 fID_pkg = fopen(fname_pkg, 'r');
 

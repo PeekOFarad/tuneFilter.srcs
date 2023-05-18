@@ -28,6 +28,8 @@ begin
     run_test(pkg_handle, "HP_w03_o8");
 
     run_test(pkg_handle, "BP_w03_07_o8");
+
+    run_test(pkg_handle, "BS_w03_07_o8");
     wait;
 end process;
 
