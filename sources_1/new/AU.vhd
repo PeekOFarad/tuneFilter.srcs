@@ -83,7 +83,7 @@ p_acc_floored:  acc_c_floored <= --positive saturation (to c_data_w)
                 else    --negative saturation (to c_data_w)
                     c_acc_sat_neg when 
                         ((acc(c_acc_w) = '1')
-                        AND (acc(c_acc_w-1 downto c_wreg_high) /= c_neg_one(c_len_mul_int-1 downto 0)))
+                        AND (acc(c_acc_w-1 downto c_wreg_high) /= c_neg_one))
                 else    -- floor to 16 digits       
                     resize(acc(c_wreg_high downto c_wreg_low)
                     &(c_wreg_low-1 downto 0 => '0'),c_acc_w);

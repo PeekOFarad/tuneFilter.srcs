@@ -6,20 +6,21 @@ use IEEE.math_real.all;
 
 package tuneFilter_pkg is
 --constants
-constant c_f_order : integer := 20; --filter order
+constant c_f_order : integer := 8; --filter order
 constant c_s_order : integer := 2; --section order
 constant c_data_w : integer := 16; --data width
 constant c_acc_w : integer := c_data_w*2+2; --accummulator width, default = 34
 constant c_prod_w : integer := c_data_w*2; --multiplier width, default = 32
-constant c_len_data_frac : integer := 13; --coefficient fractional part length
-constant c_len_coeff_frac : integer := 13; --coefficient fractional part length
-constant c_len_acc_frac : integer := 26; --accummulator fractional part length
-constant c_len_mul_frac : integer := 26; --accummulator fractional part length
-constant c_len_mul_int : integer := c_prod_w-c_len_mul_frac; -- =6
-constant c_wreg_high : integer := c_acc_w-(c_len_mul_int); -- 34-(32-26)=28, 
+constant c_frac_w : integer := 13; --coefficient fractional part length
+-- constant c_len_coeff_frac : integer := 13; --coefficient fractional part length
+-- constant c_len_acc_frac : integer := c_len_data_frac*2; --accummulator fractional part length
+-- constant c_len_mul_frac : integer := c_len_data_frac*2; --accummulator fractional part length
+constant c_len_mul_int : integer := c_prod_w-c_frac_w*2; -- =6, lenght of mul integer part
+constant c_wreg_high : integer := c_acc_w-c_len_mul_int; -- 34-(32-26)=28, 
 constant c_wreg_low : integer := c_wreg_high-(c_data_w-1); -- =13
 constant c_neg_one : signed(c_len_mul_int-1 downto 0) 
                     :=  to_signed(-1,c_len_mul_int);
+-- accumulator saturation to c_data_w (floor) in with regards to the decimal point
 constant c_acc_sat_pos : signed(c_acc_w-1 downto 0) :=  (c_acc_w-1 downto c_wreg_high => '0' )
                                                         &(c_wreg_high-1 downto c_wreg_low => '1')
                                                         &(c_wreg_low-1 downto 0 => '0');
