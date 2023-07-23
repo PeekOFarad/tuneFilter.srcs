@@ -20,16 +20,18 @@ begin
     report "Filter ready, commence test!";
 
     
-    run_test(pkg_handle, "LP_w03_o8");
+    run_test(pkg_handle, "LP_w03_o8", 4);
     -- set_op_init(pkg_handle, "cfg_w03_o8.txt");  
     -- set_op_test(pkg_handle, "test_vectors_w03_o8.txt");
     wait until pkg_handle.ready = '1';
 
-    run_test(pkg_handle, "HP_w03_o8");
+    run_test(pkg_handle, "HP_w03_o8", 4);
 
-    run_test(pkg_handle, "BP_w03_07_o8");
+    run_test(pkg_handle, "BP_w03_07_o8", 4);
 
-    run_test(pkg_handle, "BS_w03_07_o8");
+    run_test(pkg_handle, "BS_w03_07_o8", 4);
+
+    run_test(pkg_handle, "w07_o20", 10);
     wait;
 end process;
 

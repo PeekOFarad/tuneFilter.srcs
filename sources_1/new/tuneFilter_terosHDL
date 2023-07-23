@@ -1,0 +1,121 @@
+files: 
+  - name: "..\..\..\..\..\..\..\..\AppData\Local\Programs\Microsoft VS Code\AU.vhd"
+    file_type: "vhdlSource-2008"
+    is_include_file: false
+    include_path: ""
+    logical_name: ""
+    is_manual: true
+  - name: "..\..\..\..\..\..\..\..\AppData\Local\Programs\Microsoft VS Code\control.vhd"
+    file_type: "vhdlSource-2008"
+    is_include_file: false
+    include_path: ""
+    logical_name: ""
+    is_manual: true
+  - name: "..\..\..\..\..\..\..\..\AppData\Local\Programs\Microsoft VS Code\RAM_generic.vhd"
+    file_type: "vhdlSource-2008"
+    is_include_file: false
+    include_path: ""
+    logical_name: ""
+    is_manual: true
+  - name: "..\..\..\..\..\..\..\..\AppData\Local\Programs\Microsoft VS Code\top.vhd"
+    file_type: "vhdlSource-2008"
+    is_include_file: false
+    include_path: ""
+    logical_name: ""
+    is_manual: true
+  - name: "..\..\..\..\..\..\..\..\AppData\Local\Programs\Microsoft VS Code\tuneFilter_pkg.vhd"
+    file_type: "vhdlSource-2008"
+    is_include_file: false
+    include_path: ""
+    logical_name: ""
+    is_manual: true
+  - name: "..\..\sim_1\new\filter_tb_BP_w03_07_o8_data.vhd"
+    file_type: "vhdlSource-2008"
+    is_include_file: false
+    include_path: ""
+    logical_name: ""
+    is_manual: true
+  - name: "..\..\sim_1\new\filter_tb_BS_w03_07_o8_data.vhd"
+    file_type: "vhdlSource-2008"
+    is_include_file: false
+    include_path: ""
+    logical_name: ""
+    is_manual: true
+  - name: "..\..\sim_1\new\filter_tb_data_w07_o20.vhd"
+    file_type: "vhdlSource-2008"
+    is_include_file: false
+    include_path: ""
+    logical_name: ""
+    is_manual: true
+  - name: "..\..\sim_1\new\filter_tb_HP_w03_o8_data.vhd"
+    file_type: "vhdlSource-2008"
+    is_include_file: false
+    include_path: ""
+    logical_name: ""
+    is_manual: true
+  - name: "..\..\sim_1\new\filter_tb_LP_w03_o8_data.vhd"
+    file_type: "vhdlSource-2008"
+    is_include_file: false
+    include_path: ""
+    logical_name: ""
+    is_manual: true
+  - name: "..\..\sim_1\new\handshake_pkg.vhd"
+    file_type: "vhdlSource-2008"
+    is_include_file: false
+    include_path: ""
+    logical_name: ""
+    is_manual: true
+  - name: "..\..\sim_1\new\master_bfm.vhd"
+    file_type: "vhdlSource-2008"
+    is_include_file: false
+    include_path: ""
+    logical_name: ""
+    is_manual: true
+  - name: "..\..\sim_1\new\master_bfm_pkg.vhd"
+    file_type: "vhdlSource-2008"
+    is_include_file: false
+    include_path: ""
+    logical_name: ""
+    is_manual: true
+  - name: "..\..\sim_1\new\tc_master_bfm_smoke_test.vhd"
+    file_type: "vhdlSource-2008"
+    is_include_file: false
+    include_path: ""
+    logical_name: ""
+    is_manual: true
+  - name: "..\..\sim_1\new\top_tb.vhd"
+    file_type: "vhdlSource-2008"
+    is_include_file: false
+    include_path: ""
+    logical_name: ""
+    is_manual: true
+  - name: "..\..\..\..\..\..\..\..\AppData\Local\Programs\Microsoft VS Code"
+    file_type: ""
+    is_include_file: false
+    include_path: ""
+    logical_name: work
+    is_manual: false
+hooks: 
+  pre_build: 
+    []
+  post_build: 
+    []
+  pre_run: 
+    []
+  post_run: 
+    []
+watchers: 
+  []
+name: tuneFilter
+tool_options: 
+  ghdl: 
+    name: ghdl
+    installation_path: ""
+    config: 
+      installation_path: ""
+      waveform: vcd
+      analyze_options: 
+        []
+      run_options: 
+        []
+toplevel: "..\..\..\..\..\..\..\..\AppData\Local\Programs\Microsoft VS Code\top.vhd"

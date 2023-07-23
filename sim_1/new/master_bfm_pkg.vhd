@@ -13,7 +13,8 @@ package master_bfm_pkg is
         RQ                  : STD_LOGIC;
         CFG                 : STD_LOGIC;
         master_out          : std_logic_vector(c_data_w-1 downto 0);
-        waddr_coeff         : std_logic_vector(c_coeff_addr_w-1 downto 0);
+        -- waddr_coeff         : std_logic_vector(c_coeff_addr_w-1 downto 0);
+        waddr_coeff         : std_logic_vector(9 downto 0);
     end record;
 
     type t_bfm_handle_in is record
@@ -44,6 +45,7 @@ package master_bfm_pkg is
 
     
     shared variable bfm_cmd : t_bfm_cmd;
+    shared variable v_sections : integer;
 
     impure function get_bfm_cmd return t_bfm_cmd;
 
@@ -67,7 +69,8 @@ package master_bfm_pkg is
 
     procedure run_test(
         signal handle   : inout t_pkg_handle;
-        constant params : string
+        constant params : string;
+        constant sections : integer
     );
           
 -------------------------------------------------------------------------------------------------
@@ -81,7 +84,8 @@ package master_bfm_pkg is
     procedure write_coeff (
         signal bfm_handle   : out t_bfm_handle;
         constant data   : std_logic_vector(c_data_w-1 downto 0);
-        constant addr   : std_logic_vector(c_coeff_addr_w-1 downto 0)
+        -- constant addr   : std_logic_vector(c_coeff_addr_w-1 downto 0)
+        constant addr       : std_logic_vector(9 downto 0)
     );
 
     procedure write_coeff (
@@ -101,6 +105,11 @@ package master_bfm_pkg is
         signal bfm_handle_in    : in t_bfm_handle_in;
         constant test_file      : string
     );
+
+    procedure get_sections (
+        signal bfm_handle   : out t_bfm_handle
+    );
+        
         
 end package;
 
@@ -130,9 +139,11 @@ package body master_bfm_pkg is
 
     procedure run_test (
         signal handle   : inout t_pkg_handle;
-        constant params : string
+        constant params : string;
+        constant sections   : integer
     ) is
     begin
+        v_sections := sections;
         set_op_init(
             handle,
             ("cfg_"&params&".txt")
@@ -175,7 +186,8 @@ package body master_bfm_pkg is
     procedure write_coeff (
         signal bfm_handle   : out t_bfm_handle;
         constant data       : std_logic_vector(c_data_w-1 downto 0);
-        constant addr       : std_logic_vector(c_coeff_addr_w-1 downto 0)
+        -- constant addr       : std_logic_vector(c_coeff_addr_w-1 downto 0)
+        constant addr       : std_logic_vector(9 downto 0)
     ) is
     begin
         --report("---> writing coefficient " & integer'image(to_integer(unsigned(addr))) & " = " & integer'image(to_integer(signed(data))) &"!");
@@ -195,10 +207,15 @@ package body master_bfm_pkg is
         constant addr   : integer
     ) is
     begin
+        -- write_coeff(    -- this can be written directly into memory_init procedure
+        --     bfm_handle,
+        --     to_stdlogicvector(data),
+        --     std_logic_vector(to_unsigned(addr, c_coeff_addr_w))
+        -- );
         write_coeff(    -- this can be written directly into memory_init procedure
             bfm_handle,
             to_stdlogicvector(data),
-            std_logic_vector(to_unsigned(addr, c_coeff_addr_w))
+            std_logic_vector(to_unsigned(addr, 10))
         );
     end procedure;
 
@@ -252,7 +269,7 @@ package body master_bfm_pkg is
                 
                 wait until falling_edge(bfm_handle_in.GNT);
                 wait until rising_edge(bfm_handle_in.RDY);
-                wait for 0ns;
+                wait for 0 ns;
                 
                 write(line_id1, to_bitvector(bfm_handle_in.master_in), left, c_data_w);
                 writeline(file_id1, line_id1);
@@ -284,6 +301,13 @@ package body master_bfm_pkg is
         end if;   
     end procedure;
 
+    procedure get_sections (
+        signal bfm_handle : out t_bfm_handle
+    ) is
+    begin
+        bfm_handle.master_out <= std_logic_vector(to_unsigned(v_sections,c_data_w));
+    end procedure;
+
 -------------------------------------------------------------------------------------------------
 --FUNCTIONS--------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------
@@ -300,6 +324,7 @@ package body master_bfm_pkg is
             CFG => 'Z', 
             waddr_coeff => (others => 'Z'),
             master_out => (others => 'Z')
+            -- master_out => std_logic_vector(to_unsigned(4, c_data_w))
         );
         --end loop;
         return ret;

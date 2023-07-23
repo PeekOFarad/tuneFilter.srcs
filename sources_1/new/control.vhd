@@ -16,7 +16,9 @@ entity control is
             input               : in signed(c_data_w-1 downto 0);
             rdata_sample        : in signed(c_data_w-1 downto 0);
             wreg_c              : in signed(c_data_w-1 downto 0);
-            waddr_coeff         : in unsigned(c_coeff_addr_w-1 downto 0);
+            -- waddr_coeff         : in unsigned(c_coeff_addr_w-1 downto 0);
+            waddr_coeff         : in unsigned(9 downto 0);
+
             GNT                 : out STD_LOGIC;
             RDY                 : out STD_LOGIC;
             we_sample_mem       : out STD_LOGIC;
@@ -25,10 +27,16 @@ entity control is
             en_acc              : out STD_LOGIC;
             en_2nd_stage        : out STD_LOGIC;
             en_scale            : out STD_LOGIC;
-            raddr_sample        : out unsigned(c_sample_addr_w-1 downto 0);
-            waddr_sample        : out unsigned(c_sample_addr_w-1 downto 0);        
-            raddr_coeff         : out unsigned(c_coeff_addr_w-1 downto 0);
-            waddr_coeff_int     : out unsigned(c_coeff_addr_w-1 downto 0);
+            -- raddr_sample        : out unsigned(c_sample_addr_w-1 downto 0);
+            -- waddr_sample        : out unsigned(c_sample_addr_w-1 downto 0);
+            raddr_sample        : out unsigned(9 downto 0);
+            waddr_sample        : out unsigned(9 downto 0); 
+
+            -- raddr_coeff         : out unsigned(c_coeff_addr_w-1 downto 0);
+            -- waddr_coeff_int     : out unsigned(c_coeff_addr_w-1 downto 0);
+            raddr_coeff         : out unsigned(9 downto 0);
+            waddr_coeff_int     : out unsigned(9 downto 0);
+
             wdata_sample        : out signed(c_data_w-1 downto 0);
             wdata_coeff         : out signed(c_data_w-1 downto 0);
             output              : out signed(c_data_w-1 downto 0)
@@ -46,6 +54,7 @@ type t_state is (idle, run);
 --internal memory
 signal wreg0_s          : signed(c_data_w-1 downto 0);
 signal wreg1_s          : signed(c_data_w-1 downto 0);
+signal max_section_s    : unsigned(6 downto 0); --TEMP
 --FSM
 signal state            : t_state := idle;
 signal next_state       : t_state := idle;
@@ -66,8 +75,10 @@ signal en_result        : std_logic;
 signal cnt_coeff_c      :  unsigned(c_len_cnt_coeff-1 downto 0);
 signal cnt_coeff_s      :  unsigned(c_len_cnt_coeff-1 downto 0);
 signal cnt_sample       :  unsigned(c_len_cnt_sample-1 downto 0);
-signal cnt_section_c    : unsigned(c_len_cnt_section-1 downto 0);
-signal cnt_section_s    : unsigned(c_len_cnt_section-1 downto 0);
+-- signal cnt_section_c    : unsigned(c_len_cnt_section-1 downto 0);
+-- signal cnt_section_s    : unsigned(c_len_cnt_section-1 downto 0);
+signal cnt_section_c    : unsigned(6 downto 0);
+signal cnt_section_s    : unsigned(6 downto 0);
 -------------------------------------------------------------------------------------------------
 begin
     p_reg: process (clk)
@@ -85,12 +96,17 @@ begin
             CFG_s <= '0';
             cnt_coeff_s <= (others => '0');
             cnt_section_s <= (others => '0');
+            max_section_s <= (others => '1');
             flag_init_s <= '1';
         else
             --reset flag
             flag_init_s <= flag_init_c;
             --FSM
             state <= next_state;
+            --max sections
+            if en_init_done = '1' then
+                max_section_s <= resize(unsigned(std_logic_vector(input)),7);
+            end if;
             --output registers
             if RDY_c = '1' then --temporary output
                 output <= wreg1_s;
@@ -160,7 +176,7 @@ begin
     end case;
 end process;
 
-P_rst_flag: flag_init_c <=  flag_init_s when en_init_done = '0' else
+P_rst_flag: flag_init_c <=  flag_init_s when en_init_done = '0' else --SR latch for rst indic.
                             '0' when en_init_done = '1';                
 
 p_fsm: process (state, RQ_s, CFG_s, input, cnt_sample, cnt_coeff_s,cnt_section_s, wreg0_s,
@@ -206,14 +222,15 @@ begin
                 we_sample_mem <= '1';
                 we_coeff_mem <= '1';
                 wdata_sample <= (others => '0');
-                waddr_sample <= cnt_section_s & cnt_coeff_s(cnt_sample'high downto 0);
+                waddr_sample <= resize(cnt_section_s & cnt_coeff_s(cnt_sample'high downto 0),10);
                 wdata_coeff <= (others => '0');
                 waddr_coeff_int <= cnt_section_s & cnt_coeff_s;
                 if cnt_coeff_s >= 2**c_len_cnt_coeff-1 then
                     en_section_end <= '1';
                 end if;
                 if (cnt_coeff_s >= 2**c_len_cnt_coeff-1)
-                AND (cnt_section_s >= (c_f_order/c_s_order-1)) then 
+                -- AND (cnt_section_s >= (c_f_order/c_s_order-1)) then
+                AND (cnt_section_s >= max_section_s-1) then 
                     RDY_c <= '1';
                     en_init_done <= '1';
                 end if; 
@@ -252,7 +269,7 @@ begin
             end if;
             --select coresponding addresses
             raddr_coeff <= cnt_section_s & cnt_coeff_s;
-            raddr_sample <= cnt_section_s & cnt_sample;
+            raddr_sample <= resize(cnt_section_s & cnt_sample, 10);
             --rewrite memory with new data while waiting for wreg1_s
             if cnt_coeff_s >= 5 then --write enable when new delay is ready in wreg0_s
                 we_sample_mem <= '1';
@@ -260,15 +277,16 @@ begin
 
             next_state <= run;
             if cnt_coeff_s = 5 then
-                waddr_sample <= cnt_section_s & "01"; --delay(0) <= new_delay
+                waddr_sample <= resize(cnt_section_s & "01",10); --delay(0) <= new_delay
                 wdata_sample <= wreg0_s;
             elsif cnt_coeff_s = 6 then 
-                waddr_sample <= cnt_section_s & "10"; --delay(1) <= delay(0)
+                waddr_sample <= resize(cnt_section_s & "10",10); --delay(1) <= delay(0)
                 wdata_sample <= wreg1_s;
             elsif cnt_coeff_s = 7 then
                 en_section_end <= '1';
                 --if on last section, go to idle
-                if (cnt_section_s >= c_f_order/c_s_order-1) then 
+                -- if (cnt_section_s >= c_f_order/c_s_order-1) then
+                if (cnt_section_s >= max_section_s-1) then 
                     RDY_c <= '1';
                     next_state <= idle;
                 else --else write section output to next section input

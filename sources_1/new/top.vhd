@@ -19,7 +19,9 @@ entity top is
             RQ                  : in STD_LOGIC;
             CFG                 : in STD_LOGIC;
             input               : in std_logic_vector(c_data_w-1 downto 0);
-            waddr_coeff         : in std_logic_vector(c_coeff_addr_w-1 downto 0);
+            -- waddr_coeff         : in std_logic_vector(c_coeff_addr_w-1 downto 0);
+            waddr_coeff         : in std_logic_vector(9 downto 0);
+
             GNT                 : out STD_LOGIC;
             RDY                 : out STD_LOGIC;
             output              : out std_logic_vector(c_data_w-1 downto 0)
@@ -34,10 +36,16 @@ signal rdata_sample   : signed(c_data_w-1 downto 0);
 signal rdata_coeff    : signed(c_data_w-1 downto 0);
 signal wreg_c         : signed(c_data_w-1 downto 0);
 signal output_int     : signed(c_data_w-1 downto 0);
-signal waddr_sample   : unsigned(c_sample_addr_w-1 downto 0);
-signal raddr_sample   : unsigned(c_sample_addr_w-1 downto 0);
-signal waddr_coeff_int: unsigned(c_coeff_addr_w-1 downto 0);
-signal raddr_coeff    : unsigned(c_coeff_addr_w-1 downto 0);
+-- signal waddr_sample   : unsigned(c_sample_addr_w-1 downto 0);
+-- signal raddr_sample   : unsigned(c_sample_addr_w-1 downto 0);
+signal waddr_sample   : unsigned(9 downto 0);
+signal raddr_sample   : unsigned(9 downto 0);
+
+-- signal waddr_coeff_int: unsigned(c_coeff_addr_w-1 downto 0);
+-- signal raddr_coeff    : unsigned(c_coeff_addr_w-1 downto 0);
+signal waddr_coeff_int: unsigned(9 downto 0);
+signal raddr_coeff    : unsigned(9 downto 0);
+
 signal we_sample_mem  : std_logic;
 signal we_coeff_mem   : std_logic;
 signal en_1st_stage   : std_logic;
@@ -91,8 +99,8 @@ i0_AU: entity work.au(rtl)
 
 i0_RAM:  entity work.g_ram(rtl)
     generic map (
-      c_addr_w  => c_sample_addr_w,
-      c_len_mem => c_len_sample_mem
+      c_addr_w  => 10,  --c_sample_addr_w,
+      c_len_mem => 1024 --c_len_sample_mem
     )
     port map (
       clk   => clk,
@@ -105,8 +113,8 @@ i0_RAM:  entity work.g_ram(rtl)
 
 i1_RAM:  entity work.g_ram(rtl)
     generic map (
-      c_addr_w  => c_coeff_addr_w,
-      c_len_mem => c_len_coeff_mem
+      c_addr_w  => 10, --c_coeff_addr_w,
+      c_len_mem => 1024 --c_len_coeff_mem
     )
     port map (
       clk   => clk,

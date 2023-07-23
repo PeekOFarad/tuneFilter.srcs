@@ -15,7 +15,8 @@ architecture bench of top_tb is
             RQ                  : in STD_LOGIC;
             CFG                 : in STD_LOGIC;
             input               : in std_logic_vector(c_data_w-1 downto 0);
-            waddr_coeff         : in std_logic_vector(c_coeff_addr_w-1 downto 0);
+            -- waddr_coeff         : in std_logic_vector(c_coeff_addr_w-1 downto 0);
+            waddr_coeff         : in std_logic_vector(9 downto 0);
             GNT                 : out STD_LOGIC;
             RDY                 : out STD_LOGIC;
             output              : out std_logic_vector(c_data_w-1 downto 0)
@@ -26,7 +27,8 @@ architecture bench of top_tb is
   signal input : std_logic_vector(c_data_w-1 downto 0);
   signal GNT, RDY : STD_LOGIC;
   signal output : std_logic_vector(c_data_w-1 downto 0);
-  signal waddr_coeff : std_logic_vector(c_coeff_addr_w-1 downto 0);
+  --signal waddr_coeff : std_logic_vector(c_coeff_addr_w-1 downto 0);
+  signal waddr_coeff : std_logic_vector(9 downto 0);
 
 begin
 -------------------------------------------------------------------------------------------------

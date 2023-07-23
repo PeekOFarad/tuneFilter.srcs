@@ -15,7 +15,8 @@ entity master_bfm is
         master_in           : in std_logic_vector(c_data_w-1 downto 0);
         RQ                  : out STD_LOGIC;
         CFG                 : out STD_LOGIC;
-        waddr_coeff         : out std_logic_vector(c_coeff_addr_w-1 downto 0);
+        -- waddr_coeff         : out std_logic_vector(c_coeff_addr_w-1 downto 0);
+        waddr_coeff         : out std_logic_vector(9 downto 0);
         master_out          : out std_logic_vector(c_data_w-1 downto 0)
     );
 end entity; 
@@ -61,6 +62,7 @@ begin
 
             when init =>
                 rst   <= '1', '0' after 5 *clk_period;
+                get_sections(bfm_handle);
                 wait for 5*clk_period;
                 wait until rising_edge(bfm_handle_in.RDY);
                 report("---> Writing coefficients...");
